@@ -1,0 +1,46 @@
+{
+  "name": "Ceazers 3D Engineering Solutions",
+  "short_name": "Ceazers 3D",
+  "description": "Professional CAD design, prototyping and FDM 3D printing in Durban, KwaZulu-Natal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080C14",
+  "theme_color": "#0EA5E9",
+  "lang": "en-ZA",
+  "categories": ["business", "engineering", "productivity"],
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Get a Quote",
+      "short_name": "Quote",
+      "description": "Request a 3D printing or CAD design quote",
+      "url": "/#contact",
+      "icons": [{ "src": "/images/logo.png", "sizes": "any" }]
+    },
+    {
+      "name": "Cost Estimator",
+      "short_name": "Estimate",
+      "description": "Instant 3D printing cost estimate",
+      "url": "/#estimator",
+      "icons": [{ "src": "/images/logo.png", "sizes": "any" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/hero.webp",
+      "type": "image/webp",
+      "sizes": "1200x628",
+      "form_factor": "wide",
+      "label": "Ceazers 3D Engineering Solutions homepage"
+    }
+  ]
+}

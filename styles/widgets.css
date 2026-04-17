@@ -1,0 +1,400 @@
+/* Ceazers 3D - widgets.css | WhatsApp FAB, back-to-top, POPIA banner, layer counter, modal */
+
+
+    /* ============================================================
+       MODAL — Privacy & Terms
+    ============================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 44px;
+      max-width: 640px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.23,1,0.32,1);
+    }
+    .modal-overlay.open .modal-box {
+      transform: translateY(0) scale(1);
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 32px; height: 32px;
+      border: none;
+      background: rgba(0,0,0,0.06);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      color: #666;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(0,0,0,0.12); }
+    .modal-title { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 6px; }
+    .modal-date { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 22px; }
+    .modal-body h3 { font-size: 0.95rem; font-weight: 700; color: var(--color-text-primary); margin: 18px 0 6px; }
+    .modal-body p { font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.7; margin-bottom: 10px; }
+
+
+    /* ============================================================
+       BACK TO TOP
+    ============================================================ */
+    #back-to-top {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      width: 44px; height: 44px;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 900;
+      box-shadow: 0 4px 16px rgba(14,165,233,0.35);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity var(--transition), transform var(--transition), background var(--transition);
+      pointer-events: none;
+    }
+    #back-to-top svg {
+      width: 18px; height: 18px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    #back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+    #back-to-top:hover { background: var(--color-accent-dark); }
+
+
+    /* ============================================================
+       LAYER COUNTER — fixed corner printer LCD display
+    ============================================================ */
+    .layer-counter {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: rgba(8,12,20,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(14,165,233,0.15);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      color: rgba(14,165,233,0.7);
+      z-index: 999;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      line-height: 1.4;
+      letter-spacing: 0.05em;
+      transition: opacity 0.4s ease;
+      opacity: 0;
+    }
+    .layer-counter.visible {
+      opacity: 1;
+    }
+    .layer-counter .lc-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .layer-counter .lc-label {
+      color: rgba(255,255,255,0.3);
+    }
+    .layer-counter .lc-value {
+      color: #0EA5E9;
+      font-weight: 700;
+    }
+    .layer-counter .lc-status {
+      color: #22C55E;
+      animation: blink-status 1.5s step-end infinite;
+      transition: color 0.3s ease;
+    }
+    @keyframes blink-status {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .layer-counter.complete {
+      border-color: rgba(34,197,94,0.25);
+    }
+    .layer-counter.complete .lc-bar-fill {
+      background: linear-gradient(90deg, #22C55E, #4ADE80);
+    }
+    .layer-counter .lc-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .layer-counter .lc-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0EA5E9, #6366F1);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Hide 3D extras on mobile for performance */
+    @media (max-width: 768px) {
+      .hero-shapes, .wireframe-cube, .particles, .filament-spool, .filament-path { display: none; }
+      .tilt-card { transform: none !important; }
+      .layer-counter { display: none; }
+      .extruder-divider { height: 24px; }
+      .extruder-divider .extruder-head { display: none; }
+    }
+
+    @media (max-width: 1024px) {
+      :root { --section-pad: 80px; }
+
+      .hero-content { gap: 36px; }
+
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .why-inner { grid-template-columns: 1fr; gap: 52px; }
+      .why-right { grid-template-columns: repeat(4, 1fr); }
+      .why-stat-card:nth-child(even) { margin-top: 0; }
+
+      .about-inner { grid-template-columns: 1fr; gap: 52px; }
+
+      .contact-inner { grid-template-columns: 1fr; gap: 44px; }
+
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 36px; }
+    }
+
+    @media (max-width: 900px) {
+      .projects-grid { grid-template-columns: repeat(2, 1fr); }
+      .clients-grid { grid-template-columns: repeat(2, 1fr); }
+      .process-steps { grid-template-columns: repeat(2, 1fr); gap: 36px; }
+      .process-connector { display: none; }
+    }
+
+
+    /* ============================================================
+       WHATSAPP FLOATING WIDGET
+    ============================================================ */
+    .wa-fab {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 1000;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px 12px 14px;
+      background: #25D366;
+      color: #fff;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 15px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(37, 211, 102, 0.35),
+                  0 4px 12px rgba(0, 0, 0, 0.18);
+      transition: transform var(--transition), box-shadow var(--transition);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+    .wa-fab:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 14px 38px rgba(37, 211, 102, 0.5),
+                  0 6px 16px rgba(0, 0, 0, 0.22);
+      color: #fff;
+    }
+    .wa-fab:focus-visible {
+      outline: 3px solid rgba(37, 211, 102, 0.55);
+      outline-offset: 3px;
+    }
+    .wa-fab-icon {
+      width: 26px;
+      height: 26px;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wa-fab-icon svg { width: 26px; height: 26px; fill: #fff; }
+    .wa-fab-icon::before {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+      animation: wa-pulse 2.2s ease-out infinite;
+      z-index: -1;
+    }
+    .wa-fab-label { white-space: nowrap; letter-spacing: 0.2px; }
+    @keyframes wa-pulse {
+      0%   { transform: scale(0.85); opacity: 0.7; }
+      80%  { transform: scale(1.6);  opacity: 0; }
+      100% { transform: scale(1.6);  opacity: 0; }
+    }
+    @media (max-width: 640px) {
+      .wa-fab { right: 14px; bottom: 14px; padding: 12px 14px; }
+      .wa-fab-label { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wa-fab-icon::before { animation: none; }
+    }
+
+
+/* ======== BACK TO TOP (new) ======== */
+    .back-to-top {
+      position: fixed;
+      bottom: 92px;
+      right: 20px;
+      z-index: 998;
+      width: 42px;
+      height: 42px;
+      background: rgba(8,12,20,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(14,165,233,0.28);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(12px) scale(0.85);
+      transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease, border-color 0.2s ease;
+      pointer-events: none;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .back-to-top:hover {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+    .back-to-top svg {
+      width: 16px; height: 16px;
+      stroke: rgba(255,255,255,0.85);
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .back-to-top:hover svg { stroke: #fff; }
+    .back-to-top:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
+    }
+    @media (max-width: 640px) {
+      .back-to-top { bottom: 80px; right: 14px; width: 38px; height: 38px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .back-to-top { transition: opacity 0.15s ease; transform: none !important; }
+    }
+
+/* ======== POPIA COOKIE BANNER ======== */
+    .popia-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 9990;
+      background: rgba(8,12,20,0.97);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(14,165,233,0.18);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .popia-banner.visible { transform: translateY(0); }
+    .popia-banner.hidden  { display: none; }
+
+    .popia-text {
+      flex: 1;
+      min-width: 240px;
+      font-size: 0.8125rem;
+      color: rgba(255,255,255,0.68);
+      line-height: 1.6;
+    }
+    .popia-text a {
+      color: var(--color-accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .popia-text strong { color: rgba(255,255,255,0.88); }
+
+    .popia-actions {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    .popia-accept {
+      padding: 9px 20px;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition);
+      white-space: nowrap;
+    }
+    .popia-accept:hover { background: var(--color-accent-dark); }
+    .popia-accept:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    .popia-decline {
+      padding: 9px 16px;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: color var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+    .popia-decline:hover {
+      color: rgba(255,255,255,0.78);
+      border-color: rgba(255,255,255,0.28);
+    }
+    @media (max-width: 480px) {
+      .popia-banner { padding: 14px 16px; gap: 12px; }
+      .popia-actions { width: 100%; }
+      .popia-accept, .popia-decline { flex: 1; text-align: center; }
+    }

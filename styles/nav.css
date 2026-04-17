@@ -1,0 +1,179 @@
+/* Ceazers 3D - nav.css | Navigation, mobile menu, scroll progress, bg grid */
+
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+    /* ── Scroll progress bar ── */
+    .scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, #0EA5E9, #6366F1, #8B5CF6);
+      z-index: 1002;
+      transition: none;
+      border-radius: 0 2px 2px 0;
+      box-shadow: 0 0 10px rgba(14,165,233,0.5);
+    }
+
+    #navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 0 24px;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background 0.4s ease, box-shadow 0.4s ease, padding 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease;
+    }
+    #navbar.scrolled {
+      background: rgba(8,12,20,0.72);
+      backdrop-filter: blur(20px) saturate(1.6);
+      -webkit-backdrop-filter: blur(20px) saturate(1.6);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.25), 0 1px 0 rgba(255,255,255,0.05);
+      border-bottom-color: rgba(255,255,255,0.06);
+      padding: 0 24px;
+    }
+
+    .nav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: height 0.4s ease;
+    }
+    #navbar.scrolled .nav-inner {
+      height: 60px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .nav-logo-img {
+      height: 44px;
+      width: 44px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: rgba(255,255,255,0.12);
+      padding: 6px;
+      transition: height 0.4s ease, width 0.4s ease;
+      filter: invert(1);
+    }
+    #navbar.scrolled .nav-logo-img {
+      height: 38px;
+      width: 38px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .nav-links a {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.72);
+      transition: color var(--transition);
+      position: relative;
+      white-space: nowrap;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--color-accent);
+      border-radius: 2px;
+      transition: width var(--transition);
+    }
+    .nav-links a:hover,
+    .nav-links a.active { color: #fff; }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { width: 100%; }
+
+    .nav-cta { padding: 10px 20px; font-size: 0.875rem; }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px;
+      border: none;
+      background: transparent;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px; height: 2px;
+      background: #fff;
+      border-radius: 2px;
+      transition: all var(--transition);
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile menu */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 72px; left: 0; right: 0;
+      background: rgba(8,12,20,0.98);
+      backdrop-filter: blur(14px);
+      padding: 20px 24px 28px;
+      z-index: 999;
+      border-bottom: 1px solid var(--color-border-dark);
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu a {
+      display: block;
+      padding: 14px 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.82);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: color var(--transition);
+    }
+    .mobile-menu a:last-of-type { border-bottom: none; }
+    .mobile-menu a:hover { color: var(--color-accent); }
+    .mobile-menu .btn { margin-top: 20px; width: 100%; justify-content: center; }
+
+
+    /* ============================================================
+       BACKGROUND HELPERS (reused across dark sections)
+    ============================================================ */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(14,165,233,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14,165,233,0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+
+    /* ============================================================
+       NAVIGATION, logo
+    ============================================================ */
+
+
+    /* ============================================================
+       SCROLL PROGRESS BAR
+    ============================================================ */
+    .scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--color-accent) 0%, #6366f1 50%, var(--color-cta) 100%);
+      transform-origin: left center;
+      transform: scaleX(0);
+      z-index: 10000;
+      pointer-events: none;
+    }
+

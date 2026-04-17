@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Block serverless API routes from indexing
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://ceazers3d.com/sitemap.xml
