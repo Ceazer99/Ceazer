@@ -1890,3 +1890,15 @@
       will-change: transform, opacity;
     }
 
+    /* ============================================================
+       CLOUDFLARE TURNSTILE widget — blend with form styling
+    ============================================================ */
+    .cf-turnstile {
+      min-height: 65px;
+      display: flex;
+      justify-content: center;
+    }
+    .cf-turnstile iframe {
+      border-radius: var(--radius-md);
+    }
+

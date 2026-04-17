@@ -243,6 +243,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 
+  <!-- Cloudflare Turnstile (CAPTCHA) — used on the contact form -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
+
   <!-- Three.js ES Module importmap -->
   <script type="importmap">
   {
@@ -1581,6 +1584,24 @@
               </div>
 
             </div>
+
+            <!--
+              Cloudflare Turnstile — privacy-first CAPTCHA.
+              Currently using Cloudflare's public TEST key (always passes).
+              To enable real bot protection:
+                1. Go to https://dash.cloudflare.com/ → Turnstile → Add site
+                2. Domain: ceazers3d.com (+ *.vercel.app for previews)
+                3. Widget type: Managed
+                4. Copy the SITE KEY and replace the data-sitekey value below.
+              Web3Forms verifies the token automatically on their end.
+            -->
+            <div
+              class="cf-turnstile"
+              data-sitekey="1x00000000000000000000AA"
+              data-theme="auto"
+              data-size="flexible"
+              style="margin: 16px 0 8px;"
+            ></div>
 
             <div class="form-submit">
               <button type="submit" class="btn btn--primary" id="submitBtn">
