@@ -1,12 +1,10 @@
 // sw.js — Ceazers 3D Service Worker
 // Cache-first for static assets, network-first for HTML
 
-const CACHE_NAME = 'ceazers3d-v3-landing';
+const CACHE_NAME = 'ceazers3d-v2-modular';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/home',
-  '/home.html',
   '/manifest.webmanifest',
   '/styles/base.css',
   '/styles/nav.css',

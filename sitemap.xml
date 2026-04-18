@@ -7,72 +7,64 @@
   <!-- Homepage / root -->
   <url>
     <loc>https://ceazers3d.com/</loc>
-    <lastmod>2026-04-18</lastmod>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Full marketing site -->
-  <url>
-    <loc>https://ceazers3d.com/home</loc>
-    <lastmod>2026-04-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-
   <!-- In-page sections — treated as anchored routes for rich snippets -->
   <url>
-    <loc>https://ceazers3d.com/home#services</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#services</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#projects</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#projects</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#materials</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#materials</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#estimator</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#estimator</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#knowledge</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#knowledge</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#about</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#about</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#faq</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#faq</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://ceazers3d.com/home#contact</loc>
-    <lastmod>2026-04-18</lastmod>
+    <loc>https://ceazers3d.com/#contact</loc>
+    <lastmod>2026-04-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
