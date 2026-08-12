@@ -1,5 +1,5 @@
 /**
- * Ceazers 3D — API guard utilities
+ * Ceazers 3D - API guard utilities
  *   - Origin-restricted CORS
  *   - Per-IP rate limiting (in-memory token bucket, per Lambda instance)
  *

@@ -949,11 +949,13 @@
 
 
     /* ============================================================
-       RESPONSIVE — new sections
+       RESPONSIVE - new sections
     ============================================================ */
     @media (max-width: 900px) {
+      .services-grid  { grid-template-columns: repeat(2, 1fr); }
+      .projects-grid  { grid-template-columns: repeat(2, 1fr); }
       .materials-grid { grid-template-columns: repeat(2, 1fr); }
-      .usecases-grid { grid-template-columns: repeat(2, 1fr); }
+      .usecases-grid  { grid-template-columns: repeat(2, 1fr); }
       .location-inner { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
@@ -1276,7 +1278,7 @@
 
 
     /* ============================================================
-       3D TILT CARDS — perspective hover
+       3D TILT CARDS - perspective hover
     ============================================================ */
     .tilt-card {
       transform-style: preserve-3d;
@@ -1300,7 +1302,7 @@
 
 
     /* ============================================================
-       FLOATING PARTICLES — background decoration
+       FLOATING PARTICLES - background decoration
     ============================================================ */
     .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
     .particle {
@@ -1327,7 +1329,7 @@
 
 
     /* ============================================================
-       PROJECT IMAGE HOVER — zoom + overlay reveal
+       PROJECT IMAGE HOVER - zoom + overlay reveal
     ============================================================ */
     .project-image::after {
       content: '';
@@ -1373,7 +1375,7 @@
 
 
     /* ============================================================
-       LAYER-BY-LAYER PRINT REVEAL — sections "print" into view
+       LAYER-BY-LAYER PRINT REVEAL - sections "print" into view
     ============================================================ */
     .print-reveal {
       position: relative;
@@ -1416,7 +1418,7 @@
       0%   { opacity: 1; }
       100% { opacity: 0; }
     }
-    /* Override the fade-up for print-reveal children — they appear as the nozzle passes */
+    /* Override the fade-up for print-reveal children - they appear as the nozzle passes */
     .print-reveal .fade-up {
       transition-delay: 0.3s;
     }
@@ -1516,9 +1518,28 @@
       .hero-stats { gap: 24px; }
 
       .services-grid { grid-template-columns: 1fr; }
+      .projects-grid { grid-template-columns: 1fr; }
 
-      .why-right { grid-template-columns: 1fr 1fr; }
+      /*
+       * Safari/WebKit bug: overflow:hidden does not clip children when the
+       * parent has transform-style:preserve-3d.  Resetting to flat on mobile
+       * restores clipping (3D tilt is not usable on touch anyway) and prevents
+       * the service-img negative-margin bleed from causing horizontal overflow.
+       */
+      .tilt-card {
+        transform-style: flat;
+      }
+      /* Belt-and-suspenders: let grid items shrink below min-content */
+      .service-card,
+      .project-card { min-width: 0; }
+
+      /* Collapse two-column layouts to single column on mobile */
+      .why-inner  { grid-template-columns: 1fr; gap: 48px; }
+      .why-right  { grid-template-columns: 1fr 1fr; }
       .why-stat-card:nth-child(even) { margin-top: 0; }
+
+      .about-inner    { grid-template-columns: 1fr; gap: 40px; }
+      .contact-inner  { grid-template-columns: 1fr; gap: 40px; }
 
       .process-steps { grid-template-columns: 1fr; gap: 28px; }
       /* Disable pop-to-front on mobile */
@@ -1660,7 +1681,7 @@
 
 
     /* ============================================================
-       CONTACT FORM — animated gradient border
+       CONTACT FORM - animated gradient border
     ============================================================ */
     .contact-right {
       position: relative;
@@ -1685,7 +1706,7 @@
 
 
     /* ============================================================
-       CTA STRIP — neon glow enhancement
+       CTA STRIP - neon glow enhancement
     ============================================================ */
     #cta-strip {
       position: relative;
@@ -1804,6 +1825,12 @@
       color: rgba(255,255,255,0.72);
       white-space: nowrap;
     }
+    .tool-mark img.tool-logo {
+      width: 18px;
+      height: 18px;
+      filter: brightness(0) invert(1);
+      display: block;
+    }
 
 
     /* ============================================================
@@ -1891,7 +1918,7 @@
     }
 
     /* ============================================================
-       CLOUDFLARE TURNSTILE widget — blend with form styling
+       CLOUDFLARE TURNSTILE widget - blend with form styling
     ============================================================ */
     .cf-turnstile {
       min-height: 65px;

@@ -12,7 +12,7 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- In-page sections — treated as anchored routes for rich snippets -->
+  <!-- In-page sections - treated as anchored routes for rich snippets -->
   <url>
     <loc>https://ceazers3d.com/#services</loc>
     <lastmod>2026-04-17</lastmod>

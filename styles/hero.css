@@ -281,7 +281,7 @@
 
 
     /* ============================================================
-       3D FLOATING GEOMETRIC SHAPES — hero decoration
+       3D FLOATING GEOMETRIC SHAPES - hero decoration
     ============================================================ */
     .hero-shapes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
 
@@ -383,7 +383,7 @@
 
 
     /* ============================================================
-       3D WIREFRAME CUBE — pure CSS animated
+       3D WIREFRAME CUBE - pure CSS animated
     ============================================================ */
     .wireframe-cube {
       position: absolute;
@@ -414,7 +414,7 @@
 
 
     /* ============================================================
-       FILAMENT SPOOL — hero background, scroll-connected SVG spool
+       FILAMENT SPOOL - hero background, scroll-connected SVG spool
     ============================================================ */
     .filament-spool {
       position: absolute;
@@ -435,7 +435,7 @@
       transform-origin: 80px 80px;
       transition: transform 0.05s linear;
     }
-    /* Filament wound rings — animated glow */
+    /* Filament wound rings - animated glow */
     .spool-filament {
       animation: spool-glow 4s ease-in-out infinite alternate;
     }
@@ -444,7 +444,7 @@
       100% { opacity: 1; }
     }
 
-    /* Filament path — SVG line from spool weaving down */
+    /* Filament path - SVG line from spool weaving down */
     .filament-path {
       position: fixed;
       top: 0; left: 0;
@@ -465,7 +465,7 @@
 
 
     /* ============================================================
-       HERO — "Taking New Projects" availability badge
+       HERO - "Taking New Projects" availability badge
     ============================================================ */
     .hero-available {
       display: inline-flex;
@@ -496,7 +496,7 @@
 
 
     /* ============================================================
-       CAPABILITIES TICKER — scrolling strip between hero & services
+       CAPABILITIES TICKER - scrolling strip between hero & services
     ============================================================ */
     .capabilities-ticker {
       background: var(--color-bg-dark-2);

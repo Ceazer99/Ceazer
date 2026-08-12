@@ -1,4 +1,4 @@
-# Environment variables — NEVER commit these
+# Environment variables - NEVER commit these
 .env
 .env.local
 .env.*.local
@@ -25,7 +25,7 @@ desktop.ini
 *.swp
 *.swo
 
-# Claude Code — personal, not project config
+# Claude Code - personal, not project config
 .claude/settings.local.json
 
 # Logs

@@ -2,7 +2,7 @@
 
 
     /* ============================================================
-       MODAL — Privacy & Terms
+       MODAL - Privacy & Terms
     ============================================================ */
     .modal-overlay {
       position: fixed;
@@ -95,7 +95,7 @@
 
 
     /* ============================================================
-       LAYER COUNTER — fixed corner printer LCD display
+       LAYER COUNTER - fixed corner printer LCD display
     ============================================================ */
     .layer-counter {
       position: fixed;
@@ -182,7 +182,7 @@
       .services-grid { grid-template-columns: repeat(2, 1fr); }
 
       .why-inner { grid-template-columns: 1fr; gap: 52px; }
-      .why-right { grid-template-columns: repeat(4, 1fr); }
+      .why-right { grid-template-columns: repeat(2, 1fr); }
       .why-stat-card:nth-child(even) { margin-top: 0; }
 
       .about-inner { grid-template-columns: 1fr; gap: 52px; }
@@ -197,6 +197,74 @@
       .clients-grid { grid-template-columns: repeat(2, 1fr); }
       .process-steps { grid-template-columns: repeat(2, 1fr); gap: 36px; }
       .process-connector { display: none; }
+    }
+
+    /* ============================================================
+       MOBILE (≤768px) - FORCE SINGLE COLUMN
+       Loaded last so it wins the cascade against sections.css.
+       The user's explicit requirement: no 2-column layouts on phones.
+       Without this block, the 1024px/900px rules above leak into
+       phone widths and cause content to overflow the viewport.
+    ============================================================ */
+    @media (max-width: 768px) {
+      /* All content card grids → single column */
+      .services-grid,
+      .projects-grid,
+      .clients-grid,
+      .materials-grid,
+      .usecases-grid,
+      .testimonials-grid,
+      .process-steps {
+        grid-template-columns: 1fr !important;
+        gap: 22px;
+      }
+
+      /* Why-choose-us stat cards → 2x2 compact grid
+         (4 cards side-by-side is what was cutting off text). */
+      .why-right {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+      }
+      .why-stat-card:nth-child(even) { margin-top: 0; }
+      .why-stat-card { padding: 20px 16px; }
+
+      /* Two-column inner layouts → single column */
+      .why-inner,
+      .about-inner,
+      .contact-inner,
+      .location-inner {
+        grid-template-columns: 1fr !important;
+        gap: 40px;
+      }
+
+      /* Footer collapses fully */
+      .footer-top { grid-template-columns: 1fr !important; gap: 32px; }
+
+      /* Grid items: allow them to shrink below min-content so
+         long words/wide children can never force horizontal overflow. */
+      .service-card,
+      .project-card,
+      .client-card,
+      .material-card,
+      .usecase-card,
+      .testimonial-card,
+      .why-stat-card,
+      .process-step {
+        min-width: 0;
+      }
+
+      /* Safari bug: transform-style: preserve-3d breaks overflow:hidden.
+         Reset to flat on mobile; 3D tilt is not usable on touch anyway. */
+      .tilt-card { transform-style: flat; }
+
+      /* Service image: keep its full-bleed look but prevent any
+         sub-pixel overflow from the negative horizontal margins. */
+      .service-img {
+        max-width: calc(100% + 56px);
+      }
+
+      /* Defensive: cap any horizontal overflow at the page level. */
+      html, body { overflow-x: hidden; max-width: 100%; }
     }
 
 

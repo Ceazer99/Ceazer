@@ -1,12 +1,12 @@
 /**
- * Ceazers 3D — Local Development Server
+ * Ceazers 3D - Local Development Server
  * Run with:  node server.js
  *
  * - Serves index.html and all static assets
  * - Routes POST /api/generate-image to the Vercel-style handler
  * - Reads GEMINI_API_KEY from .env.local automatically
  *
- * No npm install needed — uses only Node.js built-ins (Node 18+).
+ * No npm install needed - uses only Node.js built-ins (Node 18+).
  */
 
 'use strict';
@@ -149,7 +149,7 @@ server.listen(PORT, '127.0.0.1', () => {
 
   console.log('');
   console.log('  ┌─────────────────────────────────────────────┐');
-  console.log('  │         Ceazers 3D — Dev Server             │');
+  console.log('  │         Ceazers 3D - Dev Server             │');
   console.log('  ├─────────────────────────────────────────────┤');
   console.log(`  │  Local:   http://localhost:${PORT}               │`);
   console.log('  ├─────────────────────────────────────────────┤');

@@ -1,7 +1,7 @@
-// sw.js — Ceazers 3D Service Worker
+// sw.js - Ceazers 3D Service Worker
 // Cache-first for static assets, network-first for HTML
 
-const CACHE_NAME = 'ceazers3d-v2-modular';
+const CACHE_NAME = 'ceazers3d-v4-mobile-fix';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -107,7 +107,7 @@ async function cacheFirst(request) {
     }
     return response;
   } catch {
-    return new Response('Offline — asset not cached', { status: 503 });
+    return new Response('Offline - asset not cached', { status: 503 });
   }
 }
 
@@ -125,7 +125,7 @@ async function networkFirst(request) {
       <!DOCTYPE html>
       <html lang="en"><head><meta charset="UTF-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Offline — Ceazers 3D</title>
+      <title>Offline - Ceazers 3D</title>
       <style>
         body{font-family:sans-serif;background:#080C14;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;flex-direction:column;gap:16px;text-align:center;padding:24px}
         h1{font-size:1.5rem;color:#0EA5E9}p{color:rgba(255,255,255,0.65);max-width:360px}

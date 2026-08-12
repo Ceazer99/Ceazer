@@ -90,7 +90,7 @@
       const aiResult = document.getElementById('estAiResult');
       if (aiResult) { aiResult.style.display = 'none'; aiResult.innerHTML = ''; }
       const aiBtn = document.getElementById('estAiBtn');
-      if (aiBtn) { aiBtn.disabled = false; aiBtn.innerHTML = '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> ✦ Get AI Analysis — deeper breakdown'; }
+      if (aiBtn) { aiBtn.disabled = false; aiBtn.innerHTML = '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> ✦ Get AI Analysis - deeper breakdown'; }
       setStep(0);
     });
 
@@ -123,8 +123,8 @@
 
           aiResult.innerHTML = `
             <div class="est-ai-result">
-              <div class="est-ai-price">R${(data.priceRange?.low || '—').toLocaleString('en-ZA')} – R${(data.priceRange?.high || '—').toLocaleString('en-ZA')}</div>
-              <div class="est-ai-time">⏱ ${data.printTime?.estimate || '—'} &nbsp;·&nbsp; Lead time: ${data.leadTime || '2–5 business days'}</div>
+              <div class="est-ai-price">R${(data.priceRange?.low || '-').toLocaleString('en-ZA')} – R${(data.priceRange?.high || '-').toLocaleString('en-ZA')}</div>
+              <div class="est-ai-time">⏱ ${data.printTime?.estimate || '-'} &nbsp;·&nbsp; Lead time: ${data.leadTime || '2–5 business days'}</div>
               ${data.materialAdvice ? `<div class="est-ai-advice">${data.materialAdvice}</div>` : ''}
               ${data.designTips?.length ? `<ul class="est-ai-tips">${data.designTips.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
               <div class="est-ai-confidence ${conf}">
@@ -135,9 +135,9 @@
             </div>
           `;
           aiResult.style.display = 'block';
-          aiBtn.innerHTML = '✓ Analysis complete — scroll up to see';
+          aiBtn.innerHTML = '✓ Analysis complete - scroll up to see';
         } catch (err) {
-          aiResult.innerHTML = '<div class="est-ai-result" style="color:rgba(255,255,255,0.4);font-size:0.82rem;">AI analysis unavailable right now — your estimate above is still accurate. <a href="#contact" style="color:#a5b4fc;">Request exact quote →</a></div>';
+          aiResult.innerHTML = '<div class="est-ai-result" style="color:rgba(255,255,255,0.4);font-size:0.82rem;">AI analysis unavailable right now - your estimate above is still accurate. <a href="#contact" style="color:#a5b4fc;">Request exact quote →</a></div>';
           aiResult.style.display = 'block';
           aiBtn.disabled = false;
           aiBtn.innerHTML = '↺ Retry AI Analysis';

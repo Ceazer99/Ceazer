@@ -6,7 +6,7 @@
       const heroVisual = container?.closest('.hero-visual');
       if (!container || !heroVisual) return;
 
-      // WebGL support check — fall back to static image gracefully
+      // WebGL support check - fall back to static image gracefully
       try {
         const testCanvas = document.createElement('canvas');
         const gl = testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
@@ -61,7 +61,7 @@
       fill.position.set(-6, 2, -2);
       scene.add(fill);
 
-      // Rim light (orange accent from below-back — makes edges glow)
+      // Rim light (orange accent from below-back - makes edges glow)
       const rim = new THREE.DirectionalLight(0xF97316, 1.1);
       rim.position.set(1, -5, -7);
       scene.add(rim);

@@ -63,7 +63,7 @@
     }
     splitAndReveal('.section-title');
 
-    /* ── 4. SCROLLTRIGGER BATCH — service cards ──────────────────── */
+    /* ── 4. SCROLLTRIGGER BATCH - service cards ──────────────────── */
     ScrollTrigger.batch('.service-card', {
       onEnter: batch => gsap.fromTo(batch,
         { opacity: 0, y: reducedMotion ? 0 : 40 },
@@ -73,7 +73,7 @@
       once: true
     });
 
-    /* ── 5. SCROLLTRIGGER BATCH — project cards ──────────────────── */
+    /* ── 5. SCROLLTRIGGER BATCH - project cards ──────────────────── */
     ScrollTrigger.batch('.project-card', {
       onEnter: batch => gsap.fromTo(batch,
         { opacity: 0, y: reducedMotion ? 0 : 50, scale: 0.97 },
@@ -83,7 +83,7 @@
       once: true
     });
 
-    /* ── 6. SCROLLTRIGGER BATCH — material cards ─────────────────── */
+    /* ── 6. SCROLLTRIGGER BATCH - material cards ─────────────────── */
     ScrollTrigger.batch('.material-card', {
       onEnter: batch => gsap.fromTo(batch,
         { opacity: 0, x: reducedMotion ? 0 : -30 },
@@ -93,7 +93,7 @@
       once: true
     });
 
-    /* ── 7. TOOLS STRIP — staggered entrance ─────────────────────── */
+    /* ── 7. TOOLS STRIP - staggered entrance ─────────────────────── */
     ScrollTrigger.batch('.tool-card', {
       onEnter: batch => {
         batch.forEach((card, i) => {
@@ -109,7 +109,7 @@
       once: true
     });
 
-    /* ── 8. WHY-SECTION STATS — scrubbed scale-up ────────────────── */
+    /* ── 8. WHY-SECTION STATS - scrubbed scale-up ────────────────── */
     if (!reducedMotion) {
       gsap.from('.why-stat-num', {
         scale: 0.7, opacity: 0,
@@ -118,7 +118,7 @@
       });
     }
 
-    /* ── 9. SECTION DIVIDERS — fill from left ────────────────────── */
+    /* ── 9. SECTION DIVIDERS - fill from left ────────────────────── */
     document.querySelectorAll('.extruder-divider .printed-line').forEach(line => {
       gsap.fromTo(line,
         { scaleX: 0 },
@@ -129,7 +129,7 @@
       );
     });
 
-    /* ── 10. ABOUT SECTION IMAGE — parallax drift ────────────────── */
+    /* ── 10. ABOUT SECTION IMAGE - parallax drift ────────────────── */
     if (!reducedMotion) {
       gsap.to('.about-img', {
         y: -30, ease: 'none',

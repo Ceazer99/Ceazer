@@ -1,4 +1,4 @@
-# Ceazers 3D — Engineering & Prototyping Studio
+# Ceazers 3D - Engineering & Prototyping Studio
 
 Marketing site for **Ceazers 3D Engineering Solutions (PTY) LTD**, a Durban-based
 3D printing, CAD design, and rapid prototyping studio.
@@ -31,7 +31,7 @@ vercel dev
 ```
 
 The API routes (`/api/ai-quote`, `/api/generate-image`) only work with
-`vercel dev` or a real Vercel deployment — not with the plain Python server.
+`vercel dev` or a real Vercel deployment - not with the plain Python server.
 
 ---
 
@@ -78,7 +78,7 @@ The API routes (`/api/ai-quote`, `/api/generate-image`) only work with
 └── icons/                  # PWA icons (various sizes)
 ```
 
-**CSS cascade order matters** — the `<link>` tags in `index.html` load the
+**CSS cascade order matters** - the `<link>` tags in `index.html` load the
 stylesheets in the order listed above. `refinements.css` must stay last so
 its accessibility / contrast overrides beat the base component styles.
 
@@ -139,7 +139,7 @@ git push -u origin descriptive-branch-name
 git status
 git diff
 
-# Undo all uncommitted changes (DESTRUCTIVE — can't be undone)
+# Undo all uncommitted changes (DESTRUCTIVE - can't be undone)
 git restore .
 
 # Roll back one file to how it was 3 commits ago
@@ -153,5 +153,5 @@ git log --oneline
 
 ## Contact
 
-Siyabonga Masiza — masizaonam99@gmail.com
+Siyabonga Masiza - masizaonam99@gmail.com
 Ceazers 3D Engineering Solutions (PTY) LTD, Durban, KZN

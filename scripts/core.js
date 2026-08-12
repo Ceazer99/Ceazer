@@ -368,7 +368,7 @@
     });
 
     /* ══════════════════════════════════════════════════════════════
-       LAYER-BY-LAYER PRINT REVEAL — nozzle sweep on section enter
+       LAYER-BY-LAYER PRINT REVEAL - nozzle sweep on section enter
     ══════════════════════════════════════════════════════════════ */
     const printRevealObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -384,7 +384,7 @@
     });
 
     /* ══════════════════════════════════════════════════════════════
-       EXTRUDER HEAD SECTION DIVIDERS — animate on scroll into view
+       EXTRUDER HEAD SECTION DIVIDERS - animate on scroll into view
     ══════════════════════════════════════════════════════════════ */
     const extruderObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -400,7 +400,7 @@
     });
 
     /* ══════════════════════════════════════════════════════════════
-       FILAMENT SPOOL — scroll-connected rotation
+       FILAMENT SPOOL - scroll-connected rotation
     ══════════════════════════════════════════════════════════════ */
     const spoolRotate = document.querySelector('.spool-rotate');
     if (spoolRotate && window.innerWidth > 768) {
@@ -412,7 +412,7 @@
     }
 
     /* ══════════════════════════════════════════════════════════════
-       FILAMENT PATH — SVG stroke draws as you scroll
+       FILAMENT PATH - SVG stroke draws as you scroll
     ══════════════════════════════════════════════════════════════ */
     const filamentLine = document.getElementById('filamentLine');
     if (filamentLine && window.innerWidth > 768) {
@@ -432,7 +432,7 @@
     }
 
     /* ══════════════════════════════════════════════════════════════
-       LAYER COUNTER — fixed corner printer LCD, updates on scroll
+       LAYER COUNTER - fixed corner printer LCD, updates on scroll
     ══════════════════════════════════════════════════════════════ */
     const layerCounter = document.getElementById('layerCounter');
     const lcLayer = document.getElementById('lcLayer');

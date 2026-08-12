@@ -1,11 +1,11 @@
 /**
- * Ceazers 3D — AI Quote Analysis Serverless Function
+ * Ceazers 3D - AI Quote Analysis Serverless Function
  * POST /api/ai-quote
  * Body: { material, size, qty, infill, description }
  *
  * Uses Google Gemini (gemini-2.0-flash) to analyse a 3D printing
  * request and return a structured quote breakdown.
- * GEMINI_API_KEY is server-side only — never sent to the browser.
+ * GEMINI_API_KEY is server-side only - never sent to the browser.
  */
 
 'use strict';
@@ -37,7 +37,7 @@ function buildPrompt({ material, size, qty, infill, description }) {
   const infillPct = parseInt(infill, 10) || 20;
   const quantity  = parseInt(qty, 10)   || 1;
 
-  return `You are a professional FDM 3D printing estimator at Ceazers 3D Engineering Solutions, a Durban-based engineering studio in South Africa. Analyse the following print request and return a JSON object (no markdown, no code block — pure JSON only).
+  return `You are a professional FDM 3D printing estimator at Ceazers 3D Engineering Solutions, a Durban-based engineering studio in South Africa. Analyse the following print request and return a JSON object (no markdown, no code block - pure JSON only).
 
 REQUEST:
 - Material: ${mat.full}
@@ -95,13 +95,13 @@ async function callGemini(prompt, apiKey) {
   const text = body?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
   if (!text) throw new Error('Empty response from Gemini');
 
-  // Parse JSON — strip any accidental markdown fences
+  // Parse JSON - strip any accidental markdown fences
   const clean = text.replace(/^```[a-z]*\n?/i, '').replace(/```$/i, '').trim();
   return JSON.parse(clean);
 }
 
 module.exports = async function handler(req, res) {
-  // CORS (origin-restricted) — handles OPTIONS preflight
+  // CORS (origin-restricted) - handles OPTIONS preflight
   if (!applyCors(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

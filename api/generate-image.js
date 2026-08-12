@@ -1,12 +1,12 @@
 /**
- * Ceazers 3D — Image Generation Serverless Function
+ * Ceazers 3D - Image Generation Serverless Function
  * POST /api/generate-image  { key: "<slot>" }
  *
  * Uses Google's nano-banana-pro-preview (Gemini image generation model)
  * via the generateContent endpoint. Falls back to gemini-2.5-flash-image
  * if the primary model is unavailable.
  *
- * The GEMINI_API_KEY is server-side only — never exposed to the browser.
+ * The GEMINI_API_KEY is server-side only - never exposed to the browser.
  */
 
 'use strict';
@@ -102,7 +102,7 @@ async function callModel(modelId, prompt, apiKey) {
 
 /* ── Main handler ───────────────────────────────────────────────────────── */
 module.exports = async function handler(req, res) {
-  // CORS (origin-restricted) — handles OPTIONS preflight
+  // CORS (origin-restricted) - handles OPTIONS preflight
   if (!applyCors(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
