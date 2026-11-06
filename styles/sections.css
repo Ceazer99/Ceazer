@@ -1825,10 +1825,15 @@
       color: rgba(255,255,255,0.72);
       white-space: nowrap;
     }
+    /* Official full-colour brand icons sit on a white tile */
+    .tool-mark {
+      background: #fff;
+      overflow: hidden;
+    }
     .tool-mark img.tool-logo {
-      width: 18px;
-      height: 18px;
-      filter: brightness(0) invert(1);
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
       display: block;
     }
 
