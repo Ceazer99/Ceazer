@@ -3,7 +3,7 @@
  * Run with:  node server.js
  *
  * - Serves index.html and all static assets
- * - Routes POST /api/generate-image to the Vercel-style handler
+ * - Routes /api/<name> to api/<name>.js (same as vercel.json)
  * - Reads GEMINI_API_KEY from .env.local automatically
  *
  * No npm install needed - uses only Node.js built-ins (Node 18+).
@@ -38,15 +38,25 @@ loadEnv();
 /* ── MIME types ─────────────────────────────────────────────────────────── */
 const MIME = {
   '.html': 'text/html; charset=utf-8',
-  '.css':  'text/css',
-  '.js':   'application/javascript',
+  '.css':  'text/css; charset=utf-8',
+  '.js':   'application/javascript; charset=utf-8',
   '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
+  '.xml':  'application/xml',
+  '.txt':  'text/plain; charset=utf-8',
   '.png':  'image/png',
   '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.svg':  'image/svg+xml',
   '.ico':  'image/x-icon',
+  '.mp4':  'video/mp4',
+  '.webm': 'video/webm',
   '.woff2':'font/woff2',
 };
+
+/* Never serve these over HTTP, even locally */
+const BLOCKED = [/(^|[\\/])\./, /^server\.js$/i, /^package(-lock)?\.json$/i, /^api[\\/]/i, /^(README|HANDOFF)\.md$/i];
 
 /* ── Read request body as JSON ──────────────────────────────────────────── */
 function readBody(req) {
@@ -63,7 +73,7 @@ function readBody(req) {
 
 /* ── Serve a static file ────────────────────────────────────────────────── */
 function serveFile(res, filePath) {
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     return res.end('Not found');
   }
@@ -74,59 +84,48 @@ function serveFile(res, filePath) {
   res.end(body);
 }
 
-/* ── Load the API handler (Vercel-style module.exports = handler) ──────── */
-const imageHandler = require('./api/generate-image');
+/* ── API handlers (Vercel-style module.exports = handler) ───────────────── */
+// Every api/<name>.js file is served at /api/<name> (and /api/<name>.js),
+// matching vercel.json. Add a new file to api/ and it works here too.
+const API = {};
+for (const file of fs.readdirSync(path.join(ROOT, 'api'))) {
+  if (file.endsWith('.js')) API[file.slice(0, -3)] = require(`./api/${file}`);
+}
+
+/* Add Express/Vercel-style helpers: res.status(code).json(payload) */
+function vercelify(res) {
+  res.status = (code) => { res.statusCode = code; return res; };
+  res.json = (payload) => {
+    if (!res.headersSent) res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(payload));
+  };
+  return res;
+}
 
 /* ── HTTP server ────────────────────────────────────────────────────────── */
 const server = http.createServer(async (req, res) => {
-  const url = req.url.split('?')[0]; // strip query string
+  let url;
+  try {
+    url = decodeURIComponent(req.url.split('?')[0]); // strip query, decode %20 etc.
+  } catch {
+    res.writeHead(400);
+    return res.end('Bad request');
+  }
 
-  /* ── API route ── */
-  if (url === '/api/generate-image') {
-    if (req.method === 'OPTIONS') {
-      res.writeHead(200, {
-        'Access-Control-Allow-Origin':  '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      });
-      return res.end();
+  /* ── API routes ── */
+  const apiMatch = url.match(/^\/api\/([a-z0-9-]+)(?:\.js)?\/?$/);
+  if (apiMatch) {
+    const handler = API[apiMatch[1]];
+    if (!handler) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Not found' }));
     }
-
-    if (req.method !== 'POST') {
-      res.writeHead(405, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ error: 'Method not allowed' }));
-    }
-
     try {
       req.body = await readBody(req);
-    } catch (_) {
+    } catch {
       req.body = {};
     }
-
-    /* Wrap res.json so the Vercel handler works unchanged */
-    res.json = (payload) => {
-      if (!res.headersSent) {
-        res.setHeader('Content-Type', 'application/json');
-      }
-      res.end(JSON.stringify(payload));
-    };
-
-    /* Wrap res.status to support chaining: res.status(400).json({}) */
-    const origStatus = res.writeHead.bind(res);
-    res.status = (code) => {
-      res._statusCode = code;
-      return res;
-    };
-    /* Override json to use the buffered status code */
-    const originalJson = res.json;
-    res.json = (payload) => {
-      if (!res.headersSent) {
-        res.writeHead(res._statusCode || 200, { 'Content-Type': 'application/json' });
-      }
-      res.end(JSON.stringify(payload));
-    };
-
-    return imageHandler(req, res);
+    return handler(req, vercelify(res));
   }
 
   /* ── Static files ── */
@@ -134,9 +133,10 @@ const server = http.createServer(async (req, res) => {
     return serveFile(res, path.join(ROOT, 'index.html'));
   }
 
-  const filePath = path.join(ROOT, url);
-  /* Security: prevent directory traversal */
-  if (!filePath.startsWith(ROOT)) {
+  const filePath = path.resolve(ROOT, '.' + url);
+  const rel = path.relative(ROOT, filePath);
+  /* Security: block directory traversal, dotfiles (.env.local!) and source files */
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel) || BLOCKED.some(re => re.test(rel))) {
     res.writeHead(403);
     return res.end('Forbidden');
   }

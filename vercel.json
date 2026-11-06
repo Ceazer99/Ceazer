@@ -1,7 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js",  "use": "@vercel/node"   },
+    { "src": "api/*.js",     "use": "@vercel/node"   },
     { "src": "images/**",    "use": "@vercel/static" },
     { "src": "*.html",       "use": "@vercel/static" },
     { "src": "*.xml",        "use": "@vercel/static" },
@@ -15,8 +15,8 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1",
+      "src": "/api/([a-z0-9-]+)(?:\\.js)?/?",
+      "dest": "/api/$1.js",
       "headers": {
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "strict-origin-when-cross-origin",
@@ -42,10 +42,18 @@
       }
     },
     {
-      "src": "/(.*\\.(?:css|js|webp|png|jpg|jpeg|svg|woff2?|ico))",
+      "src": "/(.*\\.(?:css|js))",
       "dest": "/$1",
       "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "X-Content-Type-Options": "nosniff"
+      }
+    },
+    {
+      "src": "/(.*\\.(?:webp|png|jpg|jpeg|svg|woff2?|ico))",
+      "dest": "/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
         "X-Content-Type-Options": "nosniff"
       }
     },

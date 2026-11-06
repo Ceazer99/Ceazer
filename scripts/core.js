@@ -54,7 +54,11 @@
     /* ── Smooth scroll for all internal anchor links ────────────── */
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
-        const target = document.querySelector(this.getAttribute('href'));
+        const href = this.getAttribute('href');
+        // Bare "#" links (privacy/terms) are not selectors - querySelector('#') throws
+        if (href.length < 2) return;
+        let target = null;
+        try { target = document.querySelector(href); } catch { return; }
         if (target) {
           e.preventDefault();
           closeMobileMenu();
@@ -64,16 +68,11 @@
       });
     });
 
-    /* ── Back to top ────────────────────────────────────────────── */
-    const backToTop = document.getElementById('back-to-top');
+    /* Back to top: handled in widgets.js (#backToTop) */
 
-    window.addEventListener('scroll', () => {
-      backToTop.classList.toggle('visible', window.scrollY > 500);
-    }, { passive: true });
-
-    backToTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    /* ── Footer copyright year: always current ──────────────────── */
+    const yearEl = document.getElementById('footerYear');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
     /* ── Scroll-triggered fade-up animations ────────────────────── */
     const fadeEls = document.querySelectorAll('.fade-up');
@@ -314,12 +313,14 @@
     /* ══════════════════════════════════════════════════════════════
        SCROLL PROGRESS BAR
     ══════════════════════════════════════════════════════════════ */
+    // Single source of truth for the bar (GSAP used to animate it too, so
+    // width% × scaleX squared the progress and the bar lagged badly).
     const scrollProgress = document.getElementById('scrollProgress');
     function updateScrollProgress() {
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      scrollProgress.style.width = progress + '%';
+      const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
+      scrollProgress.style.transform = `scaleX(${progress})`;
     }
     window.addEventListener('scroll', updateScrollProgress, { passive: true });
     updateScrollProgress();

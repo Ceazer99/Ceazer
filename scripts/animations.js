@@ -4,17 +4,7 @@
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ── 1. SCROLL PROGRESS BAR ─────────────────────────────────── */
-    gsap.to('#scrollProgress', {
-      scaleX: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: document.documentElement,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.4
-      }
-    });
+    /* ── 1. SCROLL PROGRESS BAR - handled in core.js ───────────── */
 
     /* ── 2. HERO PARALLAX ────────────────────────────────────────── */
     if (!reducedMotion) {
@@ -37,13 +27,24 @@
       document.querySelectorAll(selector).forEach(el => {
         if (el.dataset.gsapSplit) return; // already done
         el.dataset.gsapSplit = '1';
-        const text = el.textContent;
-        // Wrap each char; preserve spaces
-        el.innerHTML = text.split('').map(ch =>
-          ch === ' '
-            ? '<span class="char" style="display:inline-block;width:0.3em"> </span>'
-            : `<span class="char" style="display:inline-block">${ch}</span>`
-        ).join('');
+        // Wrap each char in a span. Built with DOM nodes (not textContent →
+        // innerHTML) so <br> line breaks survive and "&" / "<" stay literal.
+        const frag = document.createDocumentFragment();
+        el.childNodes.forEach(node => {
+          if (node.nodeType !== Node.TEXT_NODE) {
+            frag.appendChild(node.cloneNode(true)); // keep <br>, <em>, etc.
+            return;
+          }
+          for (const ch of node.textContent) {
+            const span = document.createElement('span');
+            span.className = 'char';
+            span.style.display = 'inline-block';
+            if (ch === ' ') { span.style.width = '0.3em'; span.textContent = ' '; }
+            else span.textContent = ch;
+            frag.appendChild(span);
+          }
+        });
+        el.replaceChildren(frag);
 
         gsap.from(el.querySelectorAll('.char'), {
           opacity: 0,

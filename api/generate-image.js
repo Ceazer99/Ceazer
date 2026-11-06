@@ -58,19 +58,21 @@ const ALLOWED_KEYS = new Set(Object.keys(PROMPTS));
 /* ── Model priority list ────────────────────────────────────────────────── */
 // nano-banana-pro-preview is the model the user requested.
 // We fall back in order if one returns a non-retryable error.
+// gemini-2.0-flash-exp-image-generation was retired; override with
+// GEMINI_IMAGE_MODEL if Google retires this one too.
 const MODELS = [
-  'gemini-2.0-flash-exp-image-generation',
+  process.env.GEMINI_IMAGE_MODEL || 'gemini-3.1-flash-image',
 ];
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 /* ── Call one model, return { imageData, mimeType } or throw ────────────── */
 async function callModel(modelId, prompt, apiKey) {
-  const url = `${BASE_URL}/${modelId}:generateContent?key=${apiKey}`;
+  const url = `${BASE_URL}/${modelId}:generateContent`;
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt.replace(/\s+/g, ' ').trim() }] }],
       generationConfig: { responseModalities: ['IMAGE'] },
@@ -144,6 +146,5 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  const status = lastError?.status ?? 502;
-  return res.status(status).json({ error: lastError?.message ?? 'Image generation failed' });
+  return res.status(502).json({ error: 'Image generation is temporarily unavailable.' });
 };

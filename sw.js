@@ -1,10 +1,21 @@
 // sw.js - Ceazers 3D Service Worker
-// Cache-first for static assets, network-first for HTML
+//
+// Strategies:
+//   - HTML:            network-first (fresh content, cached fallback offline)
+//   - Site CSS / JS:   stale-while-revalidate (instant load, updates picked up
+//                      on the next visit - no CACHE_NAME bump needed per edit)
+//   - Images, fonts, CDN libraries: cache-first
+//   - /api/*:          never cached
+//
+// Bump CACHE_NAME only when you want to wipe every visitor's cache.
 
-const CACHE_NAME = 'ceazers3d-v4-mobile-fix';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'ceazers3d-v5';
+
+// Core shell only. Each entry is cached independently, so a missing or
+// renamed file can no longer break the whole install (it used to: 8 of the
+// old entries were 404s, so cache.addAll() rejected and the SW never installed).
+const PRECACHE = [
   '/',
-  '/index.html',
   '/manifest.webmanifest',
   '/styles/base.css',
   '/styles/nav.css',
@@ -25,102 +36,91 @@ const STATIC_ASSETS = [
   '/scripts/widgets.js',
   '/images/logo.png',
   '/images/hero.webp',
-  '/images/about.webp',
-  '/images/service-cad.webp',
-  '/images/service-print.webp',
-  '/images/service-proto.webp',
-  '/images/service-product.webp',
-  '/images/bracket.webp',
-  '/images/prototype.webp',
-  '/images/startup.webp',
-  '/images/filament-spool.webp',
-  '/images/filament-makerbot.webp',
-  '/images/pla.webp',
-  '/images/petg.webp',
-  '/images/abs.webp',
-  '/images/tpu.webp',
 ];
 
-// Install: pre-cache all static assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => Promise.allSettled(
+        PRECACHE.map(url => cache.add(new Request(url, { cache: 'reload' })))
+      ))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate: remove old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch strategy:
-// - HTML: network-first (always try fresh, fallback to cache)
-// - API: network-only (never cache dynamic data)
-// - Everything else: cache-first (images, fonts, CDN assets)
 self.addEventListener('fetch', event => {
   const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET and cross-origin non-CDN requests
   if (request.method !== 'GET') return;
-  if (url.origin !== location.origin && !isCDNAsset(url)) return;
 
-  // API routes: network-only
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(request));
-    return;
-  }
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === location.origin;
+  if (!sameOrigin && !isCDNAsset(url)) return;
 
-  // HTML documents: network-first
-  if (request.headers.get('Accept')?.includes('text/html')) {
+  if (sameOrigin && url.pathname.startsWith('/api/')) return; // browser handles it, never cached
+
+  if (request.mode === 'navigate' || request.headers.get('Accept')?.includes('text/html')) {
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // Static assets: cache-first
+  if (sameOrigin && /\.(?:css|js)$/.test(url.pathname)) {
+    event.respondWith(staleWhileRevalidate(request, event));
+    return;
+  }
+
   event.respondWith(cacheFirst(request));
 });
 
 function isCDNAsset(url) {
-  return (
-    url.hostname.includes('fonts.googleapis.com') ||
-    url.hostname.includes('fonts.gstatic.com') ||
-    url.hostname.includes('cdnjs.cloudflare.com') ||
-    url.hostname.includes('unpkg.com')
-  );
+  return [
+    'fonts.googleapis.com',
+    'fonts.gstatic.com',
+    'cdnjs.cloudflare.com',
+    'unpkg.com',
+  ].includes(url.hostname);
+}
+
+async function putInCache(request, response) {
+  if (response && (response.ok || response.type === 'opaque')) {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+  }
+  return response;
 }
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
+    return await putInCache(request, await fetch(request));
   } catch {
     return new Response('Offline - asset not cached', { status: 503 });
   }
 }
 
+async function staleWhileRevalidate(request, event) {
+  const cached = await caches.match(request);
+  const network = fetch(request).then(res => putInCache(request, res)).catch(() => null);
+  if (cached) {
+    event.waitUntil(network);
+    return cached;
+  }
+  return (await network) || new Response('Offline - asset not cached', { status: 503 });
+}
+
 async function networkFirst(request) {
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
+    return await putInCache(request, await fetch(request));
   } catch {
-    const cached = await caches.match(request);
+    const cached = await caches.match(request) || await caches.match('/');
     return cached || new Response(`
       <!DOCTYPE html>
       <html lang="en"><head><meta charset="UTF-8">

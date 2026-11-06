@@ -51,8 +51,8 @@
       const infill   = parseInt(infillSlider.value, 10);
       // Infill multiplier: 10% = 0.75x density, 100% = 1.6x density
       const infillMult = 0.75 + (infill / 100) * 0.85;
-      // Bulk discount: >5 units = 10%, >10 = 20%
-      const bulkDisc   = qty > 10 ? 0.8 : qty > 5 ? 0.9 : 1.0;
+      // Bulk discount, as advertised in the FAQ: 5+ units = 10%, 10+ = 20%
+      const bulkDisc   = qty >= 10 ? 0.8 : qty >= 5 ? 0.9 : 1.0;
 
       const unitLow  = Math.round(basePrice * matRate * infillMult * 0.8);
       const unitHigh = Math.round(basePrice * matRate * infillMult * 1.3);
@@ -119,19 +119,27 @@
 
           if (!res.ok) throw new Error('API error ' + res.status);
           const data = await res.json();
-          const conf = (data.confidence || 'Medium').toLowerCase();
+          const confRaw = String(data.confidence || 'Medium').toLowerCase();
+          const conf = ['high', 'medium', 'low'].includes(confRaw) ? confRaw : 'medium';
+
+          // AI output is untrusted text: escape everything before it goes
+          // into innerHTML so a stray "<" (or injected markup) can't break the page.
+          const esc = v => String(v ?? '').replace(/[&<>"']/g, c =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+          const money = v => Number.isFinite(Number(v)) ? Number(v).toLocaleString('en-ZA') : '-';
+          const tips = Array.isArray(data.designTips) ? data.designTips.slice(0, 5) : [];
 
           aiResult.innerHTML = `
             <div class="est-ai-result">
-              <div class="est-ai-price">R${(data.priceRange?.low || '-').toLocaleString('en-ZA')} – R${(data.priceRange?.high || '-').toLocaleString('en-ZA')}</div>
-              <div class="est-ai-time">⏱ ${data.printTime?.estimate || '-'} &nbsp;·&nbsp; Lead time: ${data.leadTime || '2–5 business days'}</div>
-              ${data.materialAdvice ? `<div class="est-ai-advice">${data.materialAdvice}</div>` : ''}
-              ${data.designTips?.length ? `<ul class="est-ai-tips">${data.designTips.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+              <div class="est-ai-price">R${money(data.priceRange?.low)} – R${money(data.priceRange?.high)}</div>
+              <div class="est-ai-time">⏱ ${esc(data.printTime?.estimate || '-')} &nbsp;·&nbsp; Lead time: ${esc(data.leadTime || '2–5 business days')}</div>
+              ${data.materialAdvice ? `<div class="est-ai-advice">${esc(data.materialAdvice)}</div>` : ''}
+              ${tips.length ? `<ul class="est-ai-tips">${tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
               <div class="est-ai-confidence ${conf}">
                 ${conf === 'high' ? '● High confidence' : conf === 'medium' ? '◐ Medium confidence' : '○ Low confidence'}
               </div>
-              ${data.confidenceNote ? `<div class="est-ai-alt" style="margin-top:6px;font-size:0.75rem;">${data.confidenceNote}</div>` : ''}
-              ${data.alternativeMaterial ? `<div class="est-ai-alt">💡 Consider <strong>${data.alternativeMaterial}</strong> as an alternative</div>` : ''}
+              ${data.confidenceNote ? `<div class="est-ai-alt" style="margin-top:6px;font-size:0.75rem;">${esc(data.confidenceNote)}</div>` : ''}
+              ${data.alternativeMaterial && data.alternativeMaterial !== 'null' ? `<div class="est-ai-alt">💡 Consider <strong>${esc(data.alternativeMaterial)}</strong> as an alternative</div>` : ''}
             </div>
           `;
           aiResult.style.display = 'block';
