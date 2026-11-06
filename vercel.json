@@ -3,6 +3,7 @@
   "builds": [
     { "src": "api/*.js",     "use": "@vercel/node"   },
     { "src": "images/**",    "use": "@vercel/static" },
+    { "src": "videos/**",    "use": "@vercel/static" },
     { "src": "*.html",       "use": "@vercel/static" },
     { "src": "*.xml",        "use": "@vercel/static" },
     { "src": "*.txt",        "use": "@vercel/static" },
@@ -50,7 +51,7 @@
       }
     },
     {
-      "src": "/(.*\\.(?:webp|png|jpg|jpeg|svg|woff2?|ico))",
+      "src": "/(.*\\.(?:webp|png|jpg|jpeg|svg|woff2?|ico|mp4|webm))",
       "dest": "/$1",
       "headers": {
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",

@@ -36,3 +36,7 @@ logs/
 dist/
 build/
 .cache/
+
+# Raw photos/videos dropped in for processing (originals are large; processed copies go in images/)
+_incoming/
+/Projects Pictures and Videos/
