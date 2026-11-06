@@ -71,9 +71,9 @@ window.C3D_PROJECTS = [
     desc: 'A worm-gear drive that turns an outboard motor for electronic steering. The gear and worm were designed in CAD, printed, then fitted and tested on a working vessel.',
     chips: ['CAD Design', 'Worm Gear', 'FDM Printing', 'Field Testing'],
     photos: [
-      '3D-printed worm and spur gear for an outboard motor steering system',
-      'Steering gear fitted to the vessel alongside wiring and motor',
       'Installing the printed steering mechanism on the outboard motor',
+      'Steering gear fitted to the vessel alongside wiring and motor',
+      '3D-printed worm and spur gear for an outboard motor steering system',
     ],
     videos: [
       { src: 'videos/outboard-v1.mp4', poster: 'images/projects/outboard-v1.webp', title: 'CAD animation of the worm gear turning the motor' },
