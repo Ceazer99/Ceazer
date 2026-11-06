@@ -58,11 +58,32 @@ const MIME = {
 /* Never serve these over HTTP, even locally */
 const BLOCKED = [/(^|[\\/])\./, /^server\.js$/i, /^package(-lock)?\.json$/i, /^api[\\/]/i, /^(README|HANDOFF)\.md$/i];
 
-/* ── Read request body as JSON ──────────────────────────────────────────── */
+/**
+ * Map a decoded URL path to a file under ROOT, or null if it must not be
+ * served. Rejects traversal, dotfiles, source files, and Windows path
+ * aliases: NTFS alternate data streams ("server.js::$DATA") and trailing
+ * dots/spaces ("server.js.") both open the real file on Windows but would
+ * slip past the name-based block list.
+ */
+function resolveStaticPath(urlPath) {
+  if (typeof urlPath !== 'string' || urlPath.includes('\0') || urlPath.includes(':')) return null;
+  const filePath = path.resolve(ROOT, '.' + urlPath);
+  const rel = path.relative(ROOT, filePath);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return null;
+  if (rel.split(/[\\/]/).some(seg => /[. ]$/.test(seg))) return null;
+  if (BLOCKED.some(re => re.test(rel))) return null;
+  return filePath;
+}
+
+/* ── Read request body as JSON (capped, like Vercel's body limit) ──────── */
+const MAX_BODY = 1_000_000;
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
-    req.on('data', chunk => (data += chunk));
+    req.on('data', chunk => {
+      data += chunk;
+      if (data.length > MAX_BODY) { req.destroy(); reject(new Error('Body too large')); }
+    });
     req.on('end', () => {
       try { resolve(data ? JSON.parse(data) : {}); }
       catch (e) { reject(e); }
@@ -122,7 +143,8 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       req.body = await readBody(req);
-    } catch {
+    } catch (e) {
+      if (e && e.message === 'Body too large') return; // socket already destroyed
       req.body = {};
     }
     return handler(req, vercelify(res));
@@ -133,17 +155,16 @@ const server = http.createServer(async (req, res) => {
     return serveFile(res, path.join(ROOT, 'index.html'));
   }
 
-  const filePath = path.resolve(ROOT, '.' + url);
-  const rel = path.relative(ROOT, filePath);
   /* Security: block directory traversal, dotfiles (.env.local!) and source files */
-  if (!rel || rel.startsWith('..') || path.isAbsolute(rel) || BLOCKED.some(re => re.test(rel))) {
+  const filePath = resolveStaticPath(url);
+  if (!filePath) {
     res.writeHead(403);
     return res.end('Forbidden');
   }
   serveFile(res, filePath);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+if (require.main === module) server.listen(PORT, '127.0.0.1', () => {
   const key = process.env.GEMINI_API_KEY;
   const keyOk = key && key !== 'your_gemini_api_key_here' && key.startsWith('AIza');
 
@@ -155,10 +176,8 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log('  ├─────────────────────────────────────────────┤');
   if (keyOk) {
     console.log('  │  Gemini:  ✓ API key loaded                   │');
-    console.log('  │  Images:  ✓ Generation enabled               │');
   } else {
     console.log('  │  Gemini:  ✗ No API key found                 │');
-    console.log('  │  Images:  ✗ Add key to .env.local to enable  │');
   }
   console.log('  └─────────────────────────────────────────────┘');
   console.log('');
@@ -177,3 +196,5 @@ server.on('error', (err) => {
   }
   process.exit(1);
 });
+
+module.exports = { resolveStaticPath, server };

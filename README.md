@@ -30,8 +30,14 @@ vercel dev
 # → open http://localhost:3000
 ```
 
-The API routes (`/api/ai-quote`, `/api/generate-image`) only work with
+The API route (`/api/ai-quote`) only works with `node server.js`,
 `vercel dev` or a real Vercel deployment - not with the plain Python server.
+
+Run the security regression tests (no install needed, Node 18+):
+
+```bash
+npm test
+```
 
 ---
 
@@ -69,7 +75,6 @@ The API routes (`/api/ai-quote`, `/api/generate-image`) only work with
 │
 ├── api/                    # Vercel serverless functions (Node)
 │   ├── ai-quote.js         #   POST → Gemini-powered quote estimate
-│   ├── generate-image.js   #   POST → Gemini image generation
 │   └── _lib/
 │       └── guard.js        #   Shared CORS + rate-limit + input sanitiser
 │                           #   (underscore prefix = not routed publicly)
@@ -98,11 +103,11 @@ Rotate immediately if one is ever leaked into git history.
 ## Security posture
 
 - `.env` / `.env.local` git-ignored; only `.env.example` (safe template) is committed.
-- `/api/*` endpoints have origin-restricted CORS (not wildcard).
-- Per-IP rate limits on both API endpoints (8/min quote, 4/min image).
-- Input sanitisation + length caps on user-supplied prompt fields.
+- `/api/*` endpoints reject browser requests from foreign origins (403) and only send CORS headers to the production site, the same host, or localhost outside production.
+- Per-IP rate limit on `/api/ai-quote` (8/min, per serverless instance - best effort; the hard cap is the quota on the Gemini key).
+- Input sanitisation + length caps on user-supplied prompt fields; AI output is reduced to a fixed schema with length caps before it is returned.
 - `vercel.json` sets Content-Security-Policy, HSTS, X-Frame-Options,
-  Referrer-Policy, Permissions-Policy on all HTML responses.
+  Referrer-Policy, Permissions-Policy on all HTML responses. Inline scripts are blocked by CSP (the importmap is allowed by hash - update the hash if you edit it; `npm test` checks this).
 - Static assets get 1-year immutable caching; `sw.js` gets `no-cache` so
   Service Worker updates propagate immediately.
 

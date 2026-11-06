@@ -1,0 +1,3 @@
+# index.html contains an inline importmap allowed by a CSP sha256 hash in
+# vercel.json. The hash covers exact bytes, so pin line endings to LF.
+index.html text eol=lf

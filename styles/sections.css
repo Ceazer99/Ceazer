@@ -1934,3 +1934,14 @@
       border-radius: var(--radius-md);
     }
 
+
+    /* Knowledge cards hover (was inline onmouseenter/onmouseleave handlers,
+       moved here so the CSP can block inline script) */
+    .knowledge-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .knowledge-link:hover,
+    .knowledge-link:focus-visible {
+      gap: 10px !important; /* beats the inline gap:6px */
+    }

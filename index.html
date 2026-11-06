@@ -248,8 +248,8 @@
   </script>
 
   <!-- GSAP + ScrollTrigger -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-onMTRKJBKz8M1TnqqDuGBlowlH0ohFzMXYRNebz+yOcc5TQr/zAKsthzhuv0hiyUKEiQEQXEynnXCvNTOk50dg==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 
   <!-- Three.js ES Module importmap -->
   <script type="importmap">
@@ -1757,7 +1757,7 @@
       <div class="knowledge-grid fade-up" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;margin-top:48px;">
 
         <!-- Article 1 -->
-        <article class="knowledge-card" style="background:var(--color-card-dark);border:1px solid var(--color-border-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;" onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,0.3)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+        <article class="knowledge-card" style="background:var(--color-card-dark);border:1px solid var(--color-border-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;">
           <div style="height:5px;background:linear-gradient(90deg,#0EA5E9,#6366f1);"></div>
           <div style="padding:28px 28px 24px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
@@ -1766,7 +1766,7 @@
             </div>
             <h3 style="font-family:var(--font-heading);font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4;">Which Filament for Your Application? PLA vs PETG vs ABS vs Nylon</h3>
             <p style="font-size:0.83rem;color:rgba(255,255,255,0.68);line-height:1.65;margin-bottom:20px;">The most common question we get from new clients. Here's a plain-English breakdown: when PLA is enough, when you need PETG's chemical resistance, when ABS heat-tolerance matters, and why Nylon is worth the extra cost for structural gears.</p>
-            <a href="#contact" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:#38bdf8;text-decoration:none;transition:gap 0.2s ease;" onmouseenter="this.style.gap='10px'" onmouseleave="this.style.gap='6px'">
+            <a href="#contact" class="knowledge-link" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:#38bdf8;text-decoration:none;transition:gap 0.2s ease;">
               Ask us about materials
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
@@ -1774,7 +1774,7 @@
         </article>
 
         <!-- Article 2 -->
-        <article class="knowledge-card" style="background:var(--color-card-dark);border:1px solid var(--color-border-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;" onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,0.3)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+        <article class="knowledge-card" style="background:var(--color-card-dark);border:1px solid var(--color-border-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;">
           <div style="height:5px;background:linear-gradient(90deg,#F97316,#ef4444);"></div>
           <div style="padding:28px 28px 24px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
@@ -1783,7 +1783,7 @@
             </div>
             <h3 style="font-family:var(--font-heading);font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4;">FDM vs Injection Moulding for SA Startups: When 3D Printing Wins</h3>
             <p style="font-size:0.83rem;color:rgba(255,255,255,0.68);line-height:1.65;margin-bottom:20px;">Injection moulding tooling in South Africa starts at R80,000. FDM lets you validate your product at R500–R2,000. We break down the real cost comparison, the volume crossover point, and why local startups are choosing FDM for their first 500 units.</p>
-            <a href="#contact" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:#fb923c;text-decoration:none;transition:gap 0.2s ease;" onmouseenter="this.style.gap='10px'" onmouseleave="this.style.gap='6px'">
+            <a href="#contact" class="knowledge-link" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:#fb923c;text-decoration:none;transition:gap 0.2s ease;">
               Discuss your volumes
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
@@ -1791,7 +1791,7 @@
         </article>
 
         <!-- Article 3 -->
-        <article class="knowledge-card" style="background:var(--color-card-dark);border:1px solid var(--color-border-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;" onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,0.3)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+        <article class="knowledge-card" style="background:var(--color-card-dark);border:1px solid var(--color-border-dark);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;">
           <div style="height:5px;background:linear-gradient(90deg,#10B981,#06B6D4);"></div>
           <div style="padding:28px 28px 24px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
@@ -1800,7 +1800,7 @@
             </div>
             <h3 style="font-family:var(--font-heading);font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4;">How to Prepare Your STL for Printing: The 6 Checks We Do on Every File</h3>
             <p style="font-size:0.83rem;color:rgba(255,255,255,0.68);line-height:1.65;margin-bottom:20px;">Sending us a raw CAD export often adds 1–2 days of back-and-forth. Here's the checklist we run on every file: wall thickness minimums, non-manifold geometry, orientation for strength, support reduction, and tolerance allowances for FDM vs your CAD nominal.</p>
-            <a href="#contact" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:#34d399;text-decoration:none;transition:gap 0.2s ease;" onmouseenter="this.style.gap='10px'" onmouseleave="this.style.gap='6px'">
+            <a href="#contact" class="knowledge-link" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;color:#34d399;text-decoration:none;transition:gap 0.2s ease;">
               Send us your file
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
