@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "node --test tests/security.test.js tests/admin-security.test.js tests/admin-calc.test.mjs tests/admin-db.test.mjs"
+    "test": "node --test tests/security.test.js tests/admin-security.test.js tests/admin-calc.test.mjs tests/admin-db.test.mjs tests/admin-insights.test.mjs"
   },
   "description": "Ceazers 3D - Engineering design, prototyping & 3D printing business website",
   "engines": {

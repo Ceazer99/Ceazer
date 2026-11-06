@@ -16,6 +16,7 @@ const SECTIONS = [
   { id: 'documents', label: 'Document defaults', owner: true },
   { id: 'email', label: 'Email', owner: true },
   { id: 'costing', label: 'Costing & materials', owner: true },
+  { id: 'categories', label: 'Service categories', owner: true },
   { id: 'team', label: 'Team', owner: true },
   { id: 'security', label: 'Security', owner: false },
   { id: 'data', label: 'Import & export', owner: false },
@@ -30,7 +31,7 @@ export async function renderSettings(ctx, section) {
   if (!current) return h('div', {}, setTitle('Settings'), h('div', { class: 'settings-grid' }, menu, h('div', { class: 'panel muted desktop-only' }, 'Choose a section.')));
   const body = await ({
     company: companySection, branding: brandingSection, numbering: numberingSection, tax: taxSection,
-    documents: documentsSection, email: emailSection, costing: costingSection, team: teamSection,
+    documents: documentsSection, email: emailSection, costing: costingSection, categories: categoriesSection, team: teamSection,
     security: securitySection, data: dataSection, audit: auditSection,
   }[current.id])(ctx);
   return h('div', {}, setTitle('Settings'),
@@ -223,6 +224,27 @@ async function costingSection(ctx) {
     h('p', { class: 'muted' }, 'Unit cost = (material + print hours × (machine + electricity) + labour + design + other) × (1 + failure %) × (1 + overhead %). Suggested price = unit cost × (1 + markup %).'),
     fields, h('h3', {}, 'Materials'), matList,
     h('div', { class: 'mat-row' }, newName, h('span', { class: 'muted' }, 'per kg'), newPrice, addM));
+}
+
+async function categoriesSection(ctx) {
+  const cats = await ctx.api.rpc('list_categories', { include_archived: true });
+  const rows = cats.map((c) => {
+    const name = textInput('label', c.label, { maxlength: 60, 'aria-label': `Name for ${c.id}` });
+    const save = h('button', { type: 'button', class: 'btn btn-small' }, 'Save');
+    save.addEventListener('click', busy(save, async () => { await ctx.api.rpc('save_category', { id: c.id, label: name.value }); toast('Category saved'); }));
+    const arch = h('button', { type: 'button', class: 'btn btn-small btn-ghost' }, c.archived ? 'Restore' : 'Archive');
+    arch.addEventListener('click', busy(arch, async () => { await ctx.api.rpc('save_category', { id: c.id, archived: !c.archived }); ctx.navigate('/settings/categories'); }));
+    return h('div', { class: 'mat-row cat-row' }, name, h('span', { class: 'muted' }, c.archived ? 'archived' : c.id), save, arch);
+  });
+  const newName = textInput('label', '', { placeholder: 'e.g. Laser cutting', maxlength: 60, 'aria-label': 'New category' });
+  const add = h('button', { type: 'button', class: 'btn btn-small btn-primary' }, 'Add category');
+  add.addEventListener('click', busy(add, async () => {
+    if (!newName.value.trim()) throw new Error('Enter a category name');
+    await ctx.api.rpc('save_category', { label: newName.value.trim() }); ctx.navigate('/settings/categories');
+  }));
+  return h('div', { class: 'stack' },
+    h('p', { class: 'muted' }, 'Every saved item and quote line gets one of these. Keeping a short, fixed list (rather than free text) is what lets Insights compare kinds of work. Archive instead of deleting so history stays intact.'),
+    h('div', { class: 'card-list compact' }, rows), h('div', { class: 'mat-row cat-row' }, newName, h('span'), add));
 }
 
 async function teamSection(ctx) {

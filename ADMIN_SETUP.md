@@ -19,7 +19,8 @@ It runs on **Supabase**, which provides the Postgres database, login and private
 1. In Supabase, open **SQL Editor** and click **New query**.
 2. Paste the whole of `supabase/migrations/0001_admin_schema.sql` and click **Run**. It should report *Success*.
 3. Open another new query, paste `supabase/migrations/0002_admin_storage.sql` and click **Run**.
-4. In **Storage**, confirm the buckets `documents` and `branding` exist. Both must be marked **Private**.
+4. Do the same with `supabase/migrations/0003_insights_data_capture.sql` (client types, categories, lost reasons, enquiries, Insights data).
+5. In **Storage**, confirm the buckets `documents` and `branding` exist. Both must be marked **Private**.
 
 > Do **not** run anything in `supabase/test/`. Those files are a local stand-in used only by the automated tests.
 
@@ -129,3 +130,30 @@ The demo runs the real migration inside the browser using PGlite, which is Postg
 | PDFs | Generated for each issued revision and stored privately. Shared through signed links that expire after 7 days. |
 | Roles | **Owner:** everything. **Staff:** clients, items, quotes, invoices and payments, but no costing, profit, reports, settings, team or audit log. |
 | Sessions | Kept per browser tab, signed out after 30 idle minutes (configurable). TOTP two-step verification is optional per user and enforced in the database once enrolled. |
+
+---
+
+## Insights and data capture
+
+**Insights** (owner only) runs entirely in your browser on your own data. Nothing is sent to any AI or outside service.
+
+**What it does:**
+- Plain statistics work from day one: repeat-client rate, win rate by kind of work and client type, why quotes are lost, work you turned away, and revenue by client type, lead source and category.
+- Each model switches on by itself once there is enough history. Until then it shows what it still needs.
+
+| Model | Answers | Switches on at |
+|---|---|---|
+| RFM + k-means | What kinds of clients you have | 30 paying clients, 60 invoices |
+| Apriori association rules | Which services to package together | 50 jobs mixing two or more kinds of work |
+| TF-IDF + clustering | Recurring requests, including turned-away work | 100 quote lines and enquiries |
+| BG/NBD + Gamma-Gamma, plus each client's usual reorder gap | Who is drifting away, and who will reorder | 10 returning clients, 26 weeks of history |
+| L2 logistic regression with 5-fold cross-validation | What wins quotes, and the odds on open quotes | 150 won or lost quotes, at least 30 of each |
+| Holt-Winters | Busy and quiet months, next 6 months | 24 months of invoicing |
+
+**The models are only as good as what you record. Make these habits:**
+- Give every client a **type** and say **how they found you**.
+- Give every saved item and quote line a **category**. Keep the list short; owners can edit it under Settings → Service categories.
+- When a quote is lost, record **why**. The app asks for this.
+- Log every **enquiry**, especially work you **turn away**. Website form enquiries are logged automatically through `/api/enquiry`.
+
+**Privacy:** the website form now stores enquiries (name, contact details, message) in your database as well as emailing you. Mention this in your privacy notice under POPIA.

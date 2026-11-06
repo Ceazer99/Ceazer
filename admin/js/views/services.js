@@ -1,11 +1,12 @@
 // Saved services / items. Owners also see and edit the internal cost recipe.
-import { h, clear, icon, toast, money, field, textInput, textarea, moneyInput, busy, emptyState, toCents, setTitle } from '../ui.js';
+import { h, clear, icon, toast, money, field, textInput, textarea, moneyInput, busy, emptyState, toCents, setTitle, select } from '../ui.js';
 import { unitCost, suggestedPrice, marginPercent } from '../calc.js';
 
 export async function renderServices(ctx) {
   const host = h('div', { class: 'card-list' });
   const search = h('input', { type: 'search', placeholder: 'Search items', 'aria-label': 'Search items' });
   const showArchived = h('input', { type: 'checkbox' });
+  const cats = new Map((await ctx.api.rpc('list_categories', { include_archived: true })).map((x) => [x.id, x.label]));
   async function load() {
     const rows = await ctx.api.rpc('list_services', { q: search.value.trim(), include_archived: showArchived.checked });
     clear(host);
@@ -13,7 +14,7 @@ export async function renderServices(ctx) {
     rows.forEach((s) => {
       const cost = ctx.owner && s.costing ? s.costing.unit_cost_cents : null;
       host.appendChild(h('a', { class: 'doc-row', href: `#/items/${s.id}` },
-        h('div', { class: 'doc-row-main' }, h('strong', {}, s.name, s.archived ? ' (archived)' : ''), h('span', { class: 'muted' }, s.description || `per ${s.unit}`)),
+        h('div', { class: 'doc-row-main' }, h('strong', {}, s.name, s.archived ? ' (archived)' : ''), h('span', { class: 'muted' }, [s.category ? cats.get(s.category) : 'No category', s.description].filter(Boolean).join(' · '))),
         h('div', { class: 'doc-row-side' }, h('strong', { class: 'num' }, money(s.unit_price_cents)),
           cost !== null ? h('span', { class: 'muted num internal-inline' }, `cost ${money(cost)} · ${marginPercent(s.unit_price_cents, cost)}%`) : null)));
     });
@@ -27,9 +28,10 @@ export async function renderServices(ctx) {
 }
 
 export async function renderService(ctx, id) {
-  const [all, materials] = await Promise.all([
+  const [all, materials, categories] = await Promise.all([
     ctx.api.rpc('list_services', { include_archived: true }),
     ctx.owner ? ctx.api.rpc('list_materials', {}) : Promise.resolve([]),
+    ctx.api.rpc('list_categories', {}),
   ]);
   const s = id === 'new' ? { name: '', description: '', unit: 'each', unit_price_cents: 0, taxable: true } : all.find((x) => x.id === id);
   if (!s) throw new Error('Item not found');
@@ -41,6 +43,7 @@ export async function renderService(ctx, id) {
   const unit = textInput('unit', s.unit, { maxlength: 20 });
   const price = moneyInput('price', s.unit_price_cents);
   const taxable = h('input', { type: 'checkbox', checked: s.taxable !== false });
+  const category = select('category', [['', 'Choose a category…'], ...categories.map((x) => [x.id, x.label])], s.category || '');
   const err = h('p', { class: 'field-error', role: 'alert' });
 
   // owner-only costing recipe
@@ -78,7 +81,7 @@ export async function renderService(ctx, id) {
     if (!name.value.trim()) { err.textContent = 'Enter a name.'; return; }
     if (p === null) { err.textContent = 'Enter a valid price.'; return; }
     const saved = await ctx.api.rpc('save_service', { id: s.id, name: name.value.trim(), description: desc.value, unit: unit.value,
-      unit_price_cents: p, taxable: taxable.checked, ...(ctx.owner ? { costing: recipe() } : {}) });
+      unit_price_cents: p, taxable: taxable.checked, category: category.value, ...(ctx.owner ? { costing: recipe() } : {}) });
     toast('Item saved');
     if (!s.id) ctx.navigate(`/items/${saved.id}`);
   }));
@@ -91,7 +94,7 @@ export async function renderService(ctx, id) {
     h('a', { class: 'back', href: '#/items' }, icon('back', 16), 'Items'),
     setTitle(s.id ? s.name : 'New item'),
     h('section', { class: 'panel stack' },
-      field('Name *', name), field('Description (printed on documents)', desc),
+      field('Name *', name), field('Category', category, 'Keeps reports and Insights consistent. Owners can add categories in Settings.'), field('Description (printed on documents)', desc),
       h('div', { class: 'grid-2' }, field('Price', price), field('Unit', unit, 'e.g. each, hour, part')),
       h('label', { class: 'check' }, taxable, h('span', {}, 'VAT applies')), err),
     costing,

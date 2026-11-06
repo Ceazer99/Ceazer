@@ -6,6 +6,8 @@ import { renderDocumentList, renderDocument } from './views/documents.js';
 import { renderClients, renderClient } from './views/clients.js';
 import { renderServices, renderService } from './views/services.js';
 import { renderReports } from './views/reports.js';
+import { renderEnquiries } from './views/enquiries.js';
+import { renderInsights } from './views/insights.js';
 import { renderSettings } from './views/settings.js';
 
 const root = document.getElementById('app');
@@ -14,11 +16,13 @@ window.__adminCtx = ctx; // handy for debugging in the console; holds no secrets
 
 const NAV = [
   { path: '/', label: 'Home', icon: 'home' },
+  { path: '/enquiries', label: 'Enquiries', icon: 'mail' },
   { path: '/quotes', label: 'Quotes', icon: 'quote' },
   { path: '/invoices', label: 'Invoices', icon: 'invoice' },
   { path: '/items', label: 'Items', icon: 'items' },
   { path: '/clients', label: 'Clients', icon: 'clients' },
   { path: '/reports', label: 'Reports', icon: 'reports', owner: true },
+  { path: '/insights', label: 'Insights', icon: 'insights', owner: true },
   { path: '/settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -230,6 +234,8 @@ async function route() {
     } else if (seg[0] === 'clients') view = seg[1] ? await renderClient(ctx, seg[1]) : await renderClients(ctx);
     else if (seg[0] === 'items') view = seg[1] ? await renderService(ctx, seg[1]) : await renderServices(ctx);
     else if (seg[0] === 'reports' && ctx.owner) view = await renderReports(ctx);
+    else if (seg[0] === 'insights' && ctx.owner) view = await renderInsights(ctx);
+    else if (seg[0] === 'enquiries') view = await renderEnquiries(ctx);
     else if (seg[0] === 'settings') view = await renderSettings(ctx, seg[1]);
     else view = h('div', {}, setTitle('Not found'), h('p', {}, 'That page does not exist.'));
     clear(main).appendChild(view);

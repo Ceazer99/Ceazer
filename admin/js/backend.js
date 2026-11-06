@@ -148,7 +148,8 @@ export async function createDemoBackend() {
   const { loadSchema, makeRpc } = await import('./pglite-rpc.js');
   const text = async (u) => (await fetch(u, { cache: 'no-store' })).text();
   const db = new PGlite();
-  await loadSchema(db, [await text('/supabase/test/auth_stub.sql'), await text('/supabase/migrations/0001_admin_schema.sql')]);
+  await loadSchema(db, [await text('/supabase/test/auth_stub.sql'), await text('/supabase/migrations/0001_admin_schema.sql'),
+    await text('/supabase/migrations/0003_insights_data_capture.sql')]);
   const api = makeRpc(db);
   for (const [email, u] of Object.entries(DEMO_USERS)) {
     await api.sqlAdmin('insert into auth.users (id, email) values ($1, $2)', [u.id, email]);
@@ -231,5 +232,6 @@ export async function createDemoBackend() {
     }
     throw new Error('Unknown action');
   }
-  return { mode: 'demo', auth, rpc, storage, team, users: DEMO_USERS };
+  // demoSql: localhost-only escape hatch so automated browser tests can seed history quickly
+  return { mode: 'demo', auth, rpc, storage, team, users: DEMO_USERS, demoSql: (q, params) => (params ? api.sqlAdmin(q, params) : db.exec(q)) };
 }

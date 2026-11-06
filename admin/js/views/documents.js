@@ -6,6 +6,7 @@ import {
 import { computeTotals, unitCost, suggestedPrice, marginPercent, todayISO, addDays, discountPercentOf } from '../calc.js';
 import { buildPdfModel, renderPdf } from '../pdf.js';
 import { clientForm } from './clients.js';
+import { LOST_REASONS, labelOf } from '../lists.js';
 
 const LABEL = { quote: 'Quote', invoice: 'Invoice' };
 const PLURAL = { quote: 'quotes', invoice: 'invoices' };
@@ -73,6 +74,7 @@ async function renderEditor(ctx, kind, existing) {
     ctx.api.rpc('list_services', {}),
     ctx.owner ? ctx.api.rpc('list_materials', {}) : Promise.resolve([]),
   ]);
+  const categories = await ctx.api.rpc('list_categories', {});
   const today = todayISO();
   const doc = existing ? structuredClone(existing) : {
     kind, title: LABEL[kind], client_id: '', client_snapshot: {}, issue_date: today,
@@ -145,6 +147,9 @@ async function renderEditor(ctx, kind, existing) {
     const qty = h('input', { type: 'text', inputmode: 'decimal', value: String(l.qty ?? 1), class: 'num', 'aria-label': 'Quantity' });
     const rate = moneyInput('rate', l.unit_price_cents, { 'aria-label': 'Rate' });
     const taxable = h('input', { type: 'checkbox', checked: l.taxable !== false, 'aria-label': 'Taxable' });
+    const cat = select('category', [['', 'Category…'], ...categories.map((x) => [x.id, x.label])], l.category || '', { 'aria-label': 'Category' });
+    cat.classList.toggle('needs-value', !cat.value);
+    cat.addEventListener('change', () => { l.category = cat.value || null; cat.classList.toggle('needs-value', !cat.value); dirty = true; });
     const upd = () => {
       l.name = name.value; l.description = desc.value;
       const q = Number(String(qty.value).replace(',', '.'));
@@ -166,7 +171,7 @@ async function renderEditor(ctx, kind, existing) {
           h('button', { type: 'button', class: 'icon-btn danger', 'aria-label': 'Remove item', onclick: () => { doc.lines.splice(i, 1); renderLines(); markDirty(); } }, icon('trash', 16)))),
       desc,
       h('div', { class: 'line-nums' },
-        field('Qty', qty), field('Rate', rate),
+        field('Qty', qty), field('Rate', rate), field('Category', cat),
         doc.tax_mode !== 'none' ? h('label', { class: 'check' }, taxable, h('span', {}, 'VAT')) : null,
         h('div', { class: 'line-total' }, h('span', { class: 'muted' }, 'Amount'), amount)),
       ctx.owner ? costRow(l) : null);
@@ -196,7 +201,7 @@ async function renderEditor(ctx, kind, existing) {
     const svc = await pickService(services);
     if (svc) {
       doc.lines.push({ name: svc.name, description: svc.description, qty: 1, unit_price_cents: svc.unit_price_cents,
-        taxable: svc.taxable, service_id: svc.id, cost: svc.costing ? { unit_cost_cents: svc.costing.unit_cost_cents, breakdown: { source: 'service' } } : null });
+        taxable: svc.taxable, service_id: svc.id, category: svc.category || null, cost: svc.costing ? { unit_cost_cents: svc.costing.unit_cost_cents, breakdown: { source: 'service' } } : null });
       renderLines(); markDirty();
     }
   });
@@ -278,7 +283,7 @@ async function renderEditor(ctx, kind, existing) {
     deposit_percent: doc.deposit_percent, deposit_amount_cents: doc.deposit_amount_cents,
     lines: doc.lines.filter((l) => l.name || l.description || l.unit_price_cents).map((l) => ({
       id: l.id, service_id: l.service_id || null, name: l.name, description: l.description, qty: l.qty,
-      unit_price_cents: l.unit_price_cents, taxable: l.taxable !== false, ...(ctx.owner && l.cost ? { cost: l.cost } : {}),
+      unit_price_cents: l.unit_price_cents, taxable: l.taxable !== false, category: l.category || null, ...(ctx.owner && l.cost ? { cost: l.cost } : {}),
     })),
   });
   const validate = (forIssue) => {
@@ -372,7 +377,7 @@ async function renderEditor(ctx, kind, existing) {
 }
 
 const clampNum = (v, min, max) => { const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min; };
-const blankLine = (s) => ({ name: '', description: '', qty: 1, unit_price_cents: 0, taxable: s.tax_mode !== 'none', cost: null });
+const blankLine = (s) => ({ name: '', description: '', qty: 1, unit_price_cents: 0, taxable: s.tax_mode !== 'none', category: null, cost: null });
 const kpi = (label, value) => h('div', { class: 'kpi' }, h('span', {}, label), h('strong', { class: 'num' }, value));
 
 async function pickService(services) {
@@ -452,7 +457,22 @@ async function renderViewer(ctx, doc) {
   if (kind === 'quote') {
     if (doc.status === 'sent') {
       add('Mark accepted', async () => { await ctx.api.rpc('set_quote_status', { id: doc.id, status: 'accepted' }); toast('Marked accepted'); reload(); });
-      add('Mark declined', async () => { await ctx.api.rpc('set_quote_status', { id: doc.id, status: 'declined' }); toast('Marked declined'); reload(); });
+      add(doc.expired ? 'Mark lost' : 'Mark declined', async () => {
+        const reason = select('lost_reason', [['', 'Choose a reason…'], ...LOST_REASONS], doc.expired ? 'no_response' : '');
+        const note = textInput('lost_note', '', { maxlength: 300, placeholder: 'Optional: what did they say?' });
+        const err = h('p', { class: 'field-error' });
+        const ok = await modal('Why was this quote lost?', h('div', { class: 'stack' },
+          h('p', { class: 'muted' }, 'This is the most useful thing to record for pricing and spotting new services.'),
+          field('Reason', reason), field('Note', note), err), [
+          { label: 'Cancel', value: false },
+          { label: 'Mark lost', class: 'btn-primary', onClick: async () => {
+            if (!reason.value) { err.textContent = 'Choose a reason.'; return false; }
+            try { await ctx.api.rpc('set_quote_status', { id: doc.id, status: 'declined', lost_reason: reason.value, lost_note: note.value }); return true; }
+            catch (e) { err.textContent = e.message; return false; }
+          } },
+        ]);
+        if (ok) { toast('Quote marked as lost'); reload(); }
+      });
     }
     if (['sent', 'accepted'].includes(doc.status)) {
       add('Convert to invoice', async () => {
@@ -497,6 +517,7 @@ async function renderViewer(ctx, doc) {
       h('p', { class: 'lead' }, doc.client_snapshot?.name || ''),
       summary,
       doc.status === 'void' ? h('p', { class: 'field-error' }, `Void: ${doc.void_reason || ''}`) : null,
+      doc.status === 'declined' ? h('p', { class: 'muted' }, `Lost: ${labelOf(LOST_REASONS, doc.lost_reason)}${doc.lost_note ? ` (${doc.lost_note})` : ''}`) : null,
       doc.imported ? h('p', { class: 'muted' }, `Imported from your previous app${doc.imported_total_cents != null && doc.imported_total_cents !== doc.total_cents ? ` (original total ${money(doc.imported_total_cents)})` : ''}.`) : null,
       links.length ? h('p', { class: 'row-gap' }, links) : null,
       actions),

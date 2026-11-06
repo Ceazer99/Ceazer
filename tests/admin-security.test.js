@@ -45,6 +45,7 @@ function fakeSupabase({ user = { id: 'u-owner', factors: [] }, profile = { id: '
     if (u.pathname === '/rest/v1/profiles' && opts.method === 'PATCH') return reply(200, [{ id: 'x' }]);
     if (u.pathname === '/rest/v1/profiles' && opts.method === 'POST') return reply(201, null);
     if (u.pathname === '/auth/v1/invite') return reply(200, { id: '11111111-1111-4111-8111-111111111111' });
+    if (u.pathname === '/rest/v1/enquiries' && opts.method === 'POST') return reply(201, null);
     if (u.pathname.startsWith('/auth/v1/admin/users/')) return reply(200, {});
     return reply(404, {});
   };
@@ -141,6 +142,70 @@ test('admin-users: owners cannot change themselves; deactivation also bans at th
       assert.equal(JSON.parse(ban.body).ban_duration, '876000h');
     } finally { f.restore(); }
   });
+});
+
+/* ── /api/enquiry (public: website contact form -> enquiries) ── */
+const enquiry = require('../api/enquiry');
+const goodForm = { firstName: 'Lindiwe', lastName: 'M', email: 'Lindiwe@Example.com', phone: '082 123 4567',
+  clientType: 'startup', service: 'printing', message: 'Need 20 enclosure prototypes printed', fileLink: 'https://drive.example/x' };
+
+test('enquiry: refuses scripts without an Origin and foreign origins', async () => {
+  let r = mockRes(); await enquiry(req({ body: goodForm }), r); assert.equal(r.statusCode, 403);
+  r = mockRes(); await enquiry(req({ headers: { origin: 'https://evil.example' }, body: goodForm }), r); assert.equal(r.statusCode, 403);
+});
+
+test('enquiry: honeypot is silently accepted but nothing is stored; bad input is rejected', async () => {
+  await withEnv(ENV, async () => {
+    const f = fakeSupabase();
+    try {
+      const o = { origin: 'https://ceazers3d.com' };
+      let r = mockRes(); await enquiry(req({ headers: o, body: { ...goodForm, botcheck: 1 } }), r);
+      assert.equal(r.statusCode, 200);
+      assert.equal(f.calls.length, 0, 'bot submission never reaches the database');
+      r = mockRes(); await enquiry(req({ headers: o, body: { ...goodForm, email: 'nope' } }), r); assert.equal(r.statusCode, 400);
+      r = mockRes(); await enquiry(req({ headers: o, body: { ...goodForm, message: 'hi' } }), r); assert.equal(r.statusCode, 400);
+      r = mockRes(); await enquiry(req({ headers: o, body: { ...goodForm, firstName: '', lastName: '' } }), r); assert.equal(r.statusCode, 400);
+    } finally { f.restore(); }
+  });
+});
+
+test('enquiry: valid form is stored with mapped, capped fields and nothing is echoed back', async () => {
+  await withEnv(ENV, async () => {
+    const f = fakeSupabase();
+    try {
+      const r = mockRes();
+      await enquiry(req({ headers: { origin: 'https://ceazers3d.com' }, body: { ...goodForm, clientType: '__proto__', message: `${'x'.repeat(6000)}` } }), r);
+      assert.equal(r.statusCode, 201);
+      assert.deepEqual(r.body, { ok: true });
+      const call = f.calls.find((c) => c.url.endsWith('/rest/v1/enquiries'));
+      const row = JSON.parse(call.body);
+      assert.equal(row.source, 'website');
+      assert.equal(row.email, 'lindiwe@example.com');
+      assert.equal(row.client_type, null, 'unknown client types are dropped');
+      assert.equal(row.category, 'fdm_printing', 'website "printing" maps to the FDM category');
+      assert.ok(row.message.length <= 5000 + 40);
+      assert.equal(call.headers.Authorization, `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}`);
+    } finally { f.restore(); }
+  });
+});
+
+test('enquiry: not configured -> form still succeeds (202) without storing; rate limited per IP', async () => {
+  await withEnv({}, async () => {
+    const r = mockRes(); await enquiry(req({ headers: { origin: 'https://ceazers3d.com' }, body: goodForm }), r);
+    assert.equal(r.statusCode, 202);
+  });
+  const fixedIp = { origin: 'https://ceazers3d.com', 'x-forwarded-for': '203.0.113.250' };
+  const codes = [];
+  for (let i = 0; i < 7; i++) { const r = mockRes(); await enquiry({ method: 'POST', headers: { host: 'ceazers3d.com', ...fixedIp }, body: { ...goodForm, email: 'bad' }, socket: {} }, r); codes.push(r.statusCode); }
+  assert.deepEqual(codes.slice(5), [429, 429]);
+});
+
+test('website form logs enquiries fire-and-forget without blocking the email submission', () => {
+  const src = read('scripts/core.js');
+  const i = src.indexOf("fetch('/api/enquiry'");
+  assert.ok(i > 0);
+  assert.match(src.slice(i, i + 900), /\.catch\(\(\) => \{\}\)/);
+  assert.ok(src.indexOf("fetch('https://api.web3forms.com/submit'") > i, 'email submission still happens after');
 });
 
 /* ── deployment config ──────────────────────────────────────── */

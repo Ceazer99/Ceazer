@@ -149,6 +149,22 @@
 
       // Send form data to Web3Forms → your email
       const formData = new FormData(quoteForm);
+
+      // Also log the enquiry in the admin (for demand insights). Fire-and-forget:
+      // it can never block or break the email submission above.
+      try {
+        const pick = (k) => String(formData.get(k) || '');
+        fetch('/api/enquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          body: JSON.stringify({
+            firstName: pick('firstName'), lastName: pick('lastName'), email: pick('email'), phone: pick('phone'),
+            clientType: pick('clientType'), service: pick('service'), message: pick('message'),
+            fileLink: pick('fileLink'), botcheck: formData.get('botcheck') ? 1 : 0,
+          }),
+        }).catch(() => {});
+      } catch (_) { /* never block the enquiry */ }
       fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         body: formData,

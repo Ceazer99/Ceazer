@@ -1,5 +1,6 @@
 // Clients (contacts): list, detail with their documents, create/edit form.
-import { h, clear, icon, toast, money, date, field, textInput, textarea, modal, busy, emptyState, statusBadge, formValues, setTitle } from '../ui.js';
+import { h, clear, icon, toast, money, date, field, textInput, textarea, modal, busy, emptyState, statusBadge, formValues, setTitle, select } from '../ui.js';
+import { CLIENT_TYPES, LEAD_SOURCES, withBlank, labelOf } from '../lists.js';
 
 export async function renderClients(ctx) {
   const host = h('div', { class: 'card-list' });
@@ -11,7 +12,7 @@ export async function renderClients(ctx) {
     if (!rows.length) { host.appendChild(emptyState('No clients found', search.value ? 'Try another search.' : 'Add your first client, or import contacts from Settings → Import & export.')); return; }
     rows.forEach((c) => host.appendChild(h('a', { class: 'doc-row', href: `#/clients/${c.id}` },
       h('div', { class: 'doc-row-main' }, h('strong', {}, c.name, c.archived ? ' (archived)' : ''),
-        h('span', { class: 'muted' }, [c.contact_person, c.email, c.phone].filter(Boolean).join(' · ') || 'No contact details')),
+        h('span', { class: 'muted' }, [c.client_type ? labelOf(CLIENT_TYPES, c.client_type) : null, c.contact_person, c.email, c.phone].filter(Boolean).join(' · ') || 'No contact details')),
       h('div', { class: 'doc-row-side' }, c.open_balance_cents ? h('strong', { class: 'num' }, `${money(c.open_balance_cents)} owing`) : null))));
   }
   let t; search.addEventListener('input', () => { clearTimeout(t); t = setTimeout(load, 250); });
@@ -63,7 +64,9 @@ export async function clientForm(ctx, client, { asModal = false, onSaved } = {})
       field('Contact person', textInput('contact_person', c.contact_person || '', { maxlength: 120 })),
       field('VAT number', textInput('vat_number', c.vat_number || '', { maxlength: 40 })),
       field('Email', h('input', { type: 'email', name: 'email', value: c.email || '', maxlength: 200 })),
-      field('Phone', h('input', { type: 'tel', name: 'phone', value: c.phone || '', maxlength: 40 }))),
+      field('Phone', h('input', { type: 'tel', name: 'phone', value: c.phone || '', maxlength: 40 })),
+      field('Client type', select('client_type', withBlank(CLIENT_TYPES, 'Choose…'), c.client_type || ''), 'Used by Insights to see which kinds of clients bring the most work.'),
+      field('How they found you', select('lead_source', withBlank(LEAD_SOURCES, 'Choose…'), c.lead_source || ''), 'Shows which marketing actually brings in work.')),
     field('Billing address', bill),
     h('label', { class: 'check' }, same, h('span', {}, 'Shipping address is the same')),
     field('Shipping address', ship),

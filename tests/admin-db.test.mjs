@@ -27,7 +27,7 @@ const rejects = (promise, re) => assert.rejects(promise, (e) => { assert.match(e
 
 test.before(async () => {
   db = new PGlite();
-  await loadSchema(db, [read('supabase/test/auth_stub.sql'), read('supabase/migrations/0001_admin_schema.sql')]);
+  await loadSchema(db, [read('supabase/test/auth_stub.sql'), read('supabase/migrations/0001_admin_schema.sql'), read('supabase/migrations/0003_insights_data_capture.sql')]);
   api = makeRpc(db);
   await api.sqlAdmin(`insert into auth.users (id, email) values
     ('${OWNER}', 'owner@test.local'), ('${STAFF}', 'staff@test.local'),
@@ -356,6 +356,78 @@ test('import keeps historical numbers, flags total mismatches, skips duplicates,
   assert.equal(imported.balance_cents, 0);
   const clients = await rpc(owner, 'app_import', { type: 'clients', rows: [{ name: 'ARMSCOR' }, { name: 'New Co', email: 'a@b.c' }] });
   assert.equal(clients.created, 1, 'existing client matched by name, not duplicated');
+});
+
+/* ── data capture for insights (migration 0003) ────────────────── */
+test('clients record client type + lead source; unknown values are rejected', async () => {
+  const c = await rpc(staff, 'app_save_client', { name: 'Tongaat Hulett', client_type: 'manufacturing', lead_source: 'referral' });
+  assert.equal(c.client_type, 'manufacturing');
+  assert.equal(c.lead_source, 'referral');
+  await rejects(rpc(staff, 'app_save_client', { name: 'X', client_type: 'aliens' }), /clients_client_type_chk/);
+  const kept = await rpc(staff, 'app_save_client', { id: c.id, phone: '031' });
+  assert.equal(kept.client_type, 'manufacturing', 'partial update keeps the type');
+});
+
+test('categories: owner-managed list; quote lines take the saved item\'s category unless set', async () => {
+  const cats = await rpc(staff, 'app_list_categories', {});
+  assert.ok(cats.some((x) => x.id === 'fdm_printing'));
+  await rejects(rpc(staff, 'app_save_category', { label: 'Laser cutting' }), /Owner access required/);
+  const lc = await rpc(owner, 'app_save_category', { label: 'Laser cutting' });
+  assert.equal(lc.id, 'laser_cutting');
+  const svc = await rpc(owner, 'app_save_service', { name: 'Print per part', unit_price_cents: 1000, category: 'fdm_printing' });
+  const c = await newClient();
+  const d = await rpc(staff, 'app_save_document', { kind: 'quote', client_id: c.id, lines: [
+    { name: 'from item', service_id: svc.id, qty: 1, unit_price_cents: 1000 },
+    { name: 'explicit', category: 'laser_cutting', qty: 1, unit_price_cents: 500 },
+    { name: 'none', qty: 1, unit_price_cents: 1 }] });
+  assert.deepEqual(d.lines.map((l) => l.category), ['fdm_printing', 'laser_cutting', null]);
+  const dup = await rpc(staff, 'app_duplicate_document', { id: d.id });
+  assert.deepEqual(dup.lines.map((l) => l.category), ['fdm_printing', 'laser_cutting', null], 'categories survive duplication');
+});
+
+test('a lost quote must say why', async () => {
+  const c = await newClient();
+  let q = await rpc(staff, 'app_save_document', { kind: 'quote', client_id: c.id, lines: [{ name: 'x', qty: 1, unit_price_cents: 100 }] });
+  q = await rpc(staff, 'app_issue_document', { id: q.id });
+  await rejects(rpc(staff, 'app_set_quote_status', { id: q.id, status: 'declined' }), /why the quote was lost/);
+  q = await rpc(staff, 'app_set_quote_status', { id: q.id, status: 'declined', lost_reason: 'price', lost_note: 'Went with a cheaper printer' });
+  assert.equal(q.lost_reason, 'price');
+  await rejects(rpc(staff, 'app_set_quote_status', { id: q.id, status: 'declined', lost_reason: 'astrology' }), /lost_reason_chk/);
+  q = await rpc(staff, 'app_set_quote_status', { id: q.id, status: 'accepted' });
+  assert.equal(q.lost_reason, null, 'reason cleared when it turns into a win');
+});
+
+test('enquiries: logged, turned-away work needs a reason, converting matches an existing client by email', async () => {
+  const existing = await rpc(staff, 'app_save_client', { name: 'Durban Tech', email: 'Buyer@DurbanTech.example', client_type: 'business' });
+  const e1 = await rpc(staff, 'app_save_enquiry', { source: 'whatsapp', name: 'Sipho', email: 'buyer@durbantech.example', category: 'prototyping', message: 'Enclosure prototype' });
+  const conv = await rpc(staff, 'app_enquiry_to_client', { id: e1.id });
+  assert.equal(conv.client_id, existing.id, 'matched by email, no duplicate client');
+  const e2 = await rpc(staff, 'app_save_enquiry', { source: 'website', name: 'Lindiwe', company: 'Mini Makers', email: 'l@mini.example', client_type: 'startup', category: 'resin_printing', message: 'Resin miniatures' });
+  await rejects(rpc(staff, 'app_save_enquiry', { id: e2.id, status: 'turned_away' }), /why the work was turned away/);
+  const ta = await rpc(staff, 'app_save_enquiry', { id: e2.id, status: 'turned_away', turned_away_reason: 'not_offered' });
+  assert.equal(ta.turned_away_reason, 'not_offered');
+  const e3 = await rpc(staff, 'app_save_enquiry', { source: 'website', name: 'Ayanda', company: 'Ayanda Farms', email: 'a@farms.example', client_type: 'agriculture' });
+  const made = await rpc(staff, 'app_enquiry_to_client', { id: e3.id });
+  const client = (await rpc(staff, 'app_list_clients', { q: 'Ayanda Farms' }))[0];
+  assert.equal(client.id, made.client_id);
+  assert.equal(client.client_type, 'agriculture');
+  assert.equal(client.lead_source, 'website');
+  assert.equal(client.contact_person, 'Ayanda');
+  assert.deepEqual(await api.sqlAs(claims(OUTSIDER), 'select * from enquiries'), [], 'non-members see no enquiries');
+});
+
+test('insights dataset is owner-only and carries the captured fields', async () => {
+  await rejects(rpc(staff, 'app_insights_data', {}), /Owner access required/);
+  const c = await newClient();
+  let q = await rpc(staff, 'app_save_document', { kind: 'quote', client_id: c.id, lines: [{ name: 'x', qty: 1, unit_price_cents: 100 }] });
+  q = await rpc(staff, 'app_issue_document', { id: q.id });
+  await rpc(staff, 'app_set_quote_status', { id: q.id, status: 'declined', lost_reason: 'turnaround' });
+  const d = await rpc(owner, 'app_insights_data', {});
+  assert.ok(Array.isArray(d.clients) && d.clients.some((c) => c.client_type === 'manufacturing'));
+  assert.ok(d.documents.some((x) => x.lost_reason === 'turnaround'));
+  assert.ok(d.lines.some((l) => l.category === 'fdm_printing'));
+  assert.ok(d.enquiries.some((e) => e.status === 'turned_away' && e.turned_away_reason === 'not_offered'));
+  assert.ok(d.documents.every((x) => x.status !== 'void'), 'void documents are excluded');
 });
 
 /* ── audit + reports ───────────────────────────────────────────── */
