@@ -68,6 +68,7 @@ self.addEventListener('fetch', event => {
   if (!sameOrigin && !isCDNAsset(url)) return;
 
   if (sameOrigin && url.pathname.startsWith('/api/')) return; // browser handles it, never cached
+  if (sameOrigin && url.pathname.startsWith('/admin')) return; // private admin app: never cached by the service worker
   // Videos: let the browser stream them (range requests); caching whole MP4s breaks seeking in Safari
   if (request.headers.has('range') || /\.(?:mp4|webm)$/.test(url.pathname)) return;
 

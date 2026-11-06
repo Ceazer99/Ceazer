@@ -1,18 +1,58 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/*.js",     "use": "@vercel/node"   },
-    { "src": "images/**",    "use": "@vercel/static" },
-    { "src": "videos/**",    "use": "@vercel/static" },
-    { "src": "*.html",       "use": "@vercel/static" },
-    { "src": "*.xml",        "use": "@vercel/static" },
-    { "src": "*.txt",        "use": "@vercel/static" },
-    { "src": "*.json",       "use": "@vercel/static" },
-    { "src": "*.webmanifest","use": "@vercel/static" },
-    { "src": "sw.js",        "use": "@vercel/static" },
-    { "src": "icons/**",     "use": "@vercel/static" },
-    { "src": "scripts/**",   "use": "@vercel/static" },
-    { "src": "styles/**",    "use": "@vercel/static" }
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "admin/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "images/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "videos/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.xml",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.txt",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.json",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.webmanifest",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sw.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "icons/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "scripts/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "styles/**",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
     {
@@ -25,14 +65,50 @@
       }
     },
     {
+      "src": "/admin/?",
+      "dest": "/admin/index.html",
+      "headers": {
+        "Content-Security-Policy": "default-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; manifest-src 'self'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow",
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-origin"
+      }
+    },
+    {
+      "src": "/admin/(.+)",
+      "dest": "/admin/$1",
+      "headers": {
+        "Content-Security-Policy": "default-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; manifest-src 'self'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow",
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-origin"
+      }
+    },
+    {
       "src": "/sitemap.xml",
       "dest": "/sitemap.xml",
-      "headers": { "Content-Type": "application/xml; charset=utf-8" }
+      "headers": {
+        "Content-Type": "application/xml; charset=utf-8"
+      }
     },
     {
       "src": "/robots.txt",
       "dest": "/robots.txt",
-      "headers": { "Content-Type": "text/plain; charset=utf-8" }
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8"
+      }
     },
     {
       "src": "/sw.js",

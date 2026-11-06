@@ -1,0 +1,4 @@
+{
+  "//": "Lets Node's test runner load these browser ES modules directly.",
+  "type": "module"
+}

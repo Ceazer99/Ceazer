@@ -3,6 +3,7 @@ Allow: /
 
 # Block serverless API routes from indexing
 Disallow: /api/
+Disallow: /admin
 
 # Sitemap location
 Sitemap: https://ceazers3d.com/sitemap.xml

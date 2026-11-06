@@ -53,6 +53,10 @@ const MIME = {
   '.mp4':  'video/mp4',
   '.webm': 'video/webm',
   '.woff2':'font/woff2',
+  '.mjs':  'application/javascript; charset=utf-8',
+  '.wasm': 'application/wasm',
+  '.data': 'application/octet-stream',
+  '.sql':  'text/plain; charset=utf-8',
 };
 
 /* Never serve these over HTTP, even locally */
@@ -94,6 +98,8 @@ function readBody(req) {
 
 /* ── Serve a static file ────────────────────────────────────────────────── */
 function serveFile(res, filePath) {
+  // directory URL (e.g. /admin/) -> its index.html, like the Vercel route
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) filePath = path.join(filePath, 'index.html');
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     return res.end('Not found');

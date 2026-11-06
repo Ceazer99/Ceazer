@@ -41,6 +41,20 @@ npm test
 
 ---
 
+## Private admin app (/admin)
+
+Quotes, invoices, deposits, payments, clients, saved items, internal costing,
+reports and CSV migration, backed by Supabase (Postgres + Auth + private Storage).
+Setup, business rules and backups: **[ADMIN_SETUP.md](ADMIN_SETUP.md)**.
+
+```bash
+npm install   # dev-only: PGlite for tests + local demo
+npm test      # all tests (site security + admin maths/DB/permissions)
+node server.js  # http://localhost:3000/admin/?demo=1  (local demo, no credentials)
+```
+
+---
+
 ## Project structure
 
 ```
@@ -93,7 +107,9 @@ its accessibility / contrast overrides beat the base component styles.
 
 | Name             | Where to set it                     | Used by           |
 | ---------------- | ----------------------------------- | ----------------- |
-| `GEMINI_API_KEY` | `.env.local` (dev), Vercel dashboard (prod) | `api/*.js`        |
+| `GEMINI_API_KEY` | `.env.local` (dev), Vercel dashboard (prod) | `api/ai-quote.js` |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Vercel dashboard | `api/admin-config.js` |
+| `SUPABASE_SERVICE_ROLE_KEY` (secret) | Vercel dashboard only | `api/admin-users.js` |
 
 Get a Gemini key free at https://aistudio.google.com/app/apikey.
 Rotate immediately if one is ever leaked into git history.

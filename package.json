@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "node --test tests/security.test.js"
+    "test": "node --test tests/security.test.js tests/admin-security.test.js tests/admin-calc.test.mjs tests/admin-db.test.mjs"
   },
   "description": "Ceazers 3D - Engineering design, prototyping & 3D printing business website",
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.2.17"
   }
 }
