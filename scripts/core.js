@@ -153,7 +153,7 @@
         method: 'POST',
         body: formData,
       })
-        .then(res => res.json())
+        .then(res => res.json().catch(() => ({ success: false, message: `HTTP ${res.status}` })))
         .then(data => {
           if (data.success) {
             quoteForm.style.display   = 'none';
@@ -163,7 +163,7 @@
           }
         })
         .catch(err => {
-          console.error('Form error:', err);
+          console.error('Form error:', err && err.message ? err.message : err);
           submitBtn.disabled = false;
           submitBtn.innerHTML = `
             Send Enquiry
