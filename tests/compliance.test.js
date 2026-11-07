@@ -49,6 +49,12 @@ test('company name is consistent everywhere (matches the bank account holder nam
   assert.match(html, /Ceazers 3D Engineering Solutions \(Pty\) Ltd/);
 });
 
+test('company registration number is shown in the footer and the privacy notice', () => {
+  const footer = html.slice(html.indexOf('<footer'), html.indexOf('</footer>'));
+  assert.match(footer, /Reg\. no\. 2025\/508857\/07/);
+  assert.match(privacy, /registration number 2025\/508857\/07/);
+});
+
 test('contact form gives a privacy notice at the point of collection', () => {
   const form = html.slice(html.indexOf('<form id="quoteForm"'), html.indexOf('</form>', html.indexOf('<form id="quoteForm"')));
   assert.match(form, /We use your details only to respond to this enquiry/);

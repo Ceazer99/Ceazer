@@ -40,3 +40,6 @@ build/
 # Raw photos/videos dropped in for processing (originals are large; processed copies go in images/)
 _incoming/
 /Projects Pictures and Videos/
+
+# Signed employee confidentiality undertakings contain personal information - never commit
+Confidentiality/
