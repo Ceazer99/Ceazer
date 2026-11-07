@@ -149,7 +149,7 @@ export async function createDemoBackend() {
   const text = async (u) => (await fetch(u, { cache: 'no-store' })).text();
   const db = new PGlite();
   await loadSchema(db, [await text('/supabase/test/auth_stub.sql'), await text('/supabase/migrations/0001_admin_schema.sql'),
-    await text('/supabase/migrations/0003_insights_data_capture.sql')]);
+    await text('/supabase/migrations/0003_insights_data_capture.sql'), await text('/supabase/migrations/0004_privacy_popia.sql')]);
   const api = makeRpc(db);
   for (const [email, u] of Object.entries(DEMO_USERS)) {
     await api.sqlAdmin('insert into auth.users (id, email) values ($1, $2)', [u.id, email]);

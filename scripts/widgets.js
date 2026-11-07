@@ -34,27 +34,44 @@
       try { localStorage.setItem(CONSENT_KEY, value); } catch { /* ignore */ }
     }
 
-    function dismissBanner(accepted) {
+    // The banner is a notice, not a consent gate: the site sets no optional
+    // cookies, so there is nothing to accept or decline. "OK" just hides it.
+    function dismissBanner() {
       banner.classList.remove('visible');
       banner.addEventListener('transitionend', () => banner.classList.add('hidden'), { once: true });
       // Fallback in case no transition runs (reduced motion, display:none)
       setTimeout(() => banner.classList.add('hidden'), 600);
-      writeConsent(accepted ? 'accepted' : 'declined');
+      writeConsent('seen');
     }
 
-    // Show banner if no stored consent
+    // Show banner if not dismissed before
     if (!readConsent()) {
       setTimeout(showBanner, 1200); // slight delay after page load
     }
 
-    document.getElementById('popiaAccept').addEventListener('click', () => dismissBanner(true));
-    document.getElementById('popiaDecline').addEventListener('click', () => dismissBanner(false));
+    document.getElementById('popiaAccept')?.addEventListener('click', dismissBanner);
 
-    // Banner's privacy link opens the same Privacy Policy modal as the footer
-    // link (core.js). It previously fired a browser alert() on top of the modal.
-    const bannerPrivacy = document.getElementById('privacyLinkBanner');
-    if (bannerPrivacy) bannerPrivacy.addEventListener('click', e => {
-      e.preventDefault();
-      document.getElementById('privacyLink')?.click();
+    // Banner + contact-form privacy links open the same Privacy Policy modal as
+    // the footer link (core.js).
+    ['privacyLinkBanner', 'privacyLinkForm'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('privacyLink')?.click();
+      });
+    });
+
+    // ── Google Maps: load only when the visitor asks ─────────────
+    // Embedding Google Maps lets Google set cookies, so it is not loaded until requested.
+    const mapBox = document.getElementById('mapEmbed');
+    document.getElementById('mapLoad')?.addEventListener('click', () => {
+      const src = mapBox && mapBox.dataset.src;
+      if (!src || !/^https:\/\/maps\.google\.com\//.test(src)) return;
+      const frame = document.createElement('iframe');
+      frame.src = src;
+      frame.loading = 'lazy';
+      frame.referrerPolicy = 'no-referrer-when-downgrade';
+      frame.title = 'Ceazers 3D location - uMbilo, Durban, KZN';
+      frame.allowFullscreen = true;
+      mapBox.replaceChildren(frame);
     });
   })();

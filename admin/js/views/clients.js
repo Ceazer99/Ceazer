@@ -43,10 +43,53 @@ export async function renderClient(ctx, id) {
     h('a', { class: 'back', href: '#/clients' }, icon('back', 16), 'Clients'),
     setTitle(c.name, c.open_balance_cents ? h('span', { class: 'badge badge-issued' }, `${money(c.open_balance_cents)} owing`) : null),
     h('div', { class: 'grid-main-side' },
-      h('section', { class: 'panel' }, h('h2', {}, 'Details'), form),
+      h('div', { class: 'stack' }, h('section', { class: 'panel' }, h('h2', {}, 'Details'), form), privacyPanel(ctx, c)),
       h('div', { class: 'stack' },
         h('section', { class: 'panel' }, h('h2', {}, 'Quotes'), h('div', { class: 'card-list compact' }, docRows(quotes, 'quotes'))),
         h('section', { class: 'panel' }, h('h2', {}, 'Invoices'), h('div', { class: 'card-list compact' }, docRows(invoices, 'invoices'))))));
+}
+
+/** POPIA: marketing opt-out (anyone), access export + erasure (owner). */
+function privacyPanel(ctx, c) {
+  const opt = h('input', { type: 'checkbox', checked: !!c.marketing_opt_out });
+  opt.addEventListener('change', async () => {
+    try {
+      await ctx.api.rpc('set_marketing_opt_out', { id: c.id, opt_out: opt.checked });
+      toast(opt.checked ? 'Marked: do not send marketing' : 'Marketing allowed again');
+    } catch (e) { opt.checked = !opt.checked; toast(e.message, 'error'); }
+  });
+  const items = [
+    h('label', { class: 'check' }, opt, h('span', {}, 'Do not send this client marketing (they opted out)')),
+    c.marketing_opt_out_at ? h('p', { class: 'muted small' }, `Opted out on ${new Date(c.marketing_opt_out_at).toLocaleDateString('en-ZA')}`) : null,
+  ];
+  if (ctx.owner) {
+    const exp = h('button', { type: 'button', class: 'btn btn-small' }, 'Export their data');
+    exp.addEventListener('click', busy(exp, async () => {
+      const data = await ctx.api.rpc('person_export', { client_id: c.id });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = h('a', { href: URL.createObjectURL(blob), download: `personal-information-${c.name.replace(/[^A-Za-z0-9]+/g, '-')}.json` });
+      document.body.appendChild(a); a.click(); a.remove();
+      toast('Export downloaded. Send it to the person only after confirming who they are.');
+    }));
+    const erase = h('button', { type: 'button', class: 'btn btn-small btn-ghost danger' }, 'Erase personal data');
+    erase.addEventListener('click', busy(erase, async () => {
+      const reason = textInput('reason', '', { placeholder: 'e.g. Deletion request by email, 7 Nov 2026', maxlength: 200 });
+      const err = h('p', { class: 'field-error' });
+      const ok = await modal(`Erase ${c.name}?`, h('div', { class: 'stack' },
+        h('p', {}, 'This permanently deletes the client, their enquiries and any unnumbered drafts, and blanks their details in the audit history.'),
+        h('p', { class: 'muted' }, 'If they have quotes or invoices, the law requires those records to be kept for 7 years, so erasure will be refused. Turn on the marketing opt-out instead.'),
+        field('Reason (kept as a note)', reason), err), [
+        { label: 'Cancel', value: false },
+        { label: 'Erase permanently', class: 'btn-danger', onClick: async () => {
+          try { await ctx.api.rpc('erase_client', { id: c.id, reason: reason.value }); return true; }
+          catch (e) { err.textContent = e.message; return false; }
+        } }]);
+      if (ok) { toast('Personal data erased'); ctx.navigate('/clients'); }
+    }));
+    items.push(h('div', { class: 'row-gap wrap' }, exp, erase),
+      h('p', { class: 'muted small' }, 'Use these for POPIA requests (see Settings → Privacy & retention).'));
+  }
+  return h('section', { class: 'panel' }, h('h2', {}, 'Privacy'), items);
 }
 
 /** Client form. asModal: opens a dialog and resolves with the saved client (or null). */

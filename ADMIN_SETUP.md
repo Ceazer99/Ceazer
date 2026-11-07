@@ -20,7 +20,8 @@ It runs on **Supabase**, which provides the Postgres database, login and private
 2. Paste the whole of `supabase/migrations/0001_admin_schema.sql` and click **Run**. It should report *Success*.
 3. Open another new query, paste `supabase/migrations/0002_admin_storage.sql` and click **Run**.
 4. Do the same with `supabase/migrations/0003_insights_data_capture.sql` (client types, categories, lost reasons, enquiries, Insights data).
-5. In **Storage**, confirm the buckets `documents` and `branding` exist. Both must be marked **Private**.
+5. Do the same with `supabase/migrations/0004_privacy_popia.sql` (marketing opt-out, access export, erasure, retention).
+6. In **Storage**, confirm the buckets `documents` and `branding` exist. Both must be marked **Private**.
 
 > Do **not** run anything in `supabase/test/`. Those files are a local stand-in used only by the automated tests.
 
@@ -157,3 +158,34 @@ The demo runs the real migration inside the browser using PGlite, which is Postg
 - Log every **enquiry**, especially work you **turn away**. Website form enquiries are logged automatically through `/api/enquiry`.
 
 **Privacy:** the website form now stores enquiries (name, contact details, message) in your database as well as emailing you. Mention this in your privacy notice under POPIA.
+
+---
+
+## POPIA and other legal requirements
+
+This is practical guidance, not legal advice. Have a POPIA practitioner or attorney review it once.
+
+**Built in:**
+
+| Requirement | Where |
+|---|---|
+| Privacy notice (POPIA s18): who you are, the Information Officer, purposes, operators, transfers outside South Africa (s72), retention, rights, how to complain to the Information Regulator | Website → Privacy Policy |
+| Notice at the point of collection | Under the contact form |
+| No tracking cookies; Google Maps loads only when a visitor asks | Website |
+| Access requests (s23) | Client page → Privacy → Export their data |
+| Correction (s24) | Edit the client. Issued documents keep the details as they were on the day of issue, as tax law requires |
+| Deletion (s24), with tax-law retention respected | Client page → Erase personal data. Refused while quotes or invoices must be kept for 7 years |
+| Retention (s14): 24 months for enquiries that led nowhere | Settings → Privacy & retention → Check what is due for deletion |
+| Marketing opt-out (s69, ECT Act s45) | Client page → Privacy. Insights never suggests contacting opted-out clients |
+| Security (s19) | Row-level security, owner/staff roles, two-step verification, audit log, private storage, strict security headers |
+| Breach steps (s22) | Settings → Privacy & retention |
+| VAT Act: proper tax invoices | Warnings in the editor when the VAT setting doesn't match your registration |
+| Consumer Protection Act: online estimates are not binding | Website terms + "Indicative range only" on the estimator |
+
+**Things only you can do:**
+1. **Register your Information Officer** on the Information Regulator's eServices portal: https://eservices.inforegulator.org.za/. Breaches must also be reported through this portal, so register now.
+2. **Accept the Supabase Data Processing Addendum** (Organization → Legal documents). Vercel's DPA is part of its terms.
+3. **Staff confidentiality:** have each staff member sign a confidentiality undertaking before they get a login.
+4. **Retention:** run the retention check every quarter.
+5. **Company details:** confirm that the company name, registration number and physical address on the website match your CIPC registration. Add the registration number to the footer and in Settings → Company profile, where it then prints on invoices.
+6. **PAIA manual:** check whether your company needs one under the Promotion of Access to Information Act.

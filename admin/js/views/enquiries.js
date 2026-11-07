@@ -66,6 +66,14 @@ function enquiryRow(ctx, e, catLabel, reload, categories) {
   } else if (e.status !== 'new') {
     act('Reopen', async () => { await ctx.api.rpc('save_enquiry', { id: e.id, status: 'new' }); reload(); }, 'btn btn-small btn-ghost');
   }
+  if (ctx.owner) {
+    act('Erase', async () => {
+      const ok = await modal('Erase this enquiry?', h('p', {}, 'Use this for a deletion request or spam containing personal details. The enquiry is deleted and blanked in the audit history. This cannot be undone.'),
+        [{ label: 'Cancel', value: false }, { label: 'Erase permanently', class: 'btn-danger', value: true }]);
+      if (!ok) return;
+      await ctx.api.rpc('erase_enquiry', { id: e.id }); toast('Enquiry erased'); reload();
+    }, 'btn btn-small btn-ghost danger');
+  }
   return h('div', { class: 'enquiry' },
     h('div', { class: 'enquiry-head' },
       h('div', {}, h('strong', {}, e.company || e.name || 'Unknown'), h('div', { class: 'muted' },

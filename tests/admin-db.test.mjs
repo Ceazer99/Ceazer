@@ -27,7 +27,8 @@ const rejects = (promise, re) => assert.rejects(promise, (e) => { assert.match(e
 
 test.before(async () => {
   db = new PGlite();
-  await loadSchema(db, [read('supabase/test/auth_stub.sql'), read('supabase/migrations/0001_admin_schema.sql'), read('supabase/migrations/0003_insights_data_capture.sql')]);
+  await loadSchema(db, [read('supabase/test/auth_stub.sql'), read('supabase/migrations/0001_admin_schema.sql'), read('supabase/migrations/0003_insights_data_capture.sql'),
+    read('supabase/migrations/0004_privacy_popia.sql')]);
   api = makeRpc(db);
   await api.sqlAdmin(`insert into auth.users (id, email) values
     ('${OWNER}', 'owner@test.local'), ('${STAFF}', 'staff@test.local'),
@@ -428,6 +429,77 @@ test('insights dataset is owner-only and carries the captured fields', async () 
   assert.ok(d.lines.some((l) => l.category === 'fdm_printing'));
   assert.ok(d.enquiries.some((e) => e.status === 'turned_away' && e.turned_away_reason === 'not_offered'));
   assert.ok(d.documents.every((x) => x.status !== 'void'), 'void documents are excluded');
+});
+
+/* ── POPIA support (migration 0004) ────────────────────────────── */
+test('marketing opt-out is recorded with a timestamp and can be reversed', async () => {
+  const c = await rpc(staff, 'app_save_client', { name: 'Opt Out Ltd', email: 'stop@optout.example' });
+  let r = await rpc(staff, 'app_set_marketing_opt_out', { id: c.id, opt_out: true });
+  assert.equal(r.marketing_opt_out, true); assert.ok(r.marketing_opt_out_at);
+  r = await rpc(staff, 'app_set_marketing_opt_out', { id: c.id, opt_out: false });
+  assert.equal(r.marketing_opt_out, false); assert.equal(r.marketing_opt_out_at, null);
+});
+
+test('access request: owner exports everything held about a person; staff cannot', async () => {
+  const c = await rpc(owner, 'app_save_client', { name: 'Thabo Access', email: 'Thabo@Access.example', phone: '0820000000' });
+  await rpc(staff, 'app_save_enquiry', { source: 'website', name: 'Thabo', email: 'thabo@access.example', message: 'Bracket print' });
+  let q = await rpc(owner, 'app_save_document', { kind: 'quote', client_id: c.id, lines: [{ name: 'Bracket', qty: 1, unit_price_cents: 5000 }] });
+  q = await rpc(owner, 'app_issue_document', { id: q.id });
+  await rejects(rpc(staff, 'app_person_export', { email: 'thabo@access.example' }), /Owner access required/);
+  const x = await rpc(owner, 'app_person_export', { email: 'THABO@access.example' });
+  assert.equal(x.clients.length, 1);
+  assert.equal(x.enquiries.length, 1);
+  assert.equal(x.documents[0].number, q.number);
+  assert.equal(x.documents[0].lines[0].item, 'Bracket');
+  assert.doesNotMatch(JSON.stringify(x), /unit_cost|cost_total|internal_notes/, 'export contains no internal costing');
+});
+
+test('erasure: refused while tax law requires the records; otherwise deletes and scrubs the audit history', async () => {
+  const kept = (await rpc(owner, 'app_list_clients', { q: 'Thabo Access' }))[0];
+  await rejects(rpc(owner, 'app_erase_client', { id: kept.id, reason: 'request' }), /must be kept for 7 years/);
+  await rejects(rpc(owner, 'app_erase_client', { id: kept.id }), /Record why/);
+
+  const gone = await rpc(staff, 'app_save_client', { name: 'Erase Me Pty', email: 'erase.me@private.example', phone: '0831112222' });
+  await rpc(staff, 'app_save_document', { kind: 'invoice', client_id: gone.id, lines: [{ name: 'draft', qty: 1, unit_price_cents: 1 }] });
+  const e = await rpc(staff, 'app_save_enquiry', { source: 'phone', name: 'Erase Me', email: 'erase.me@private.example' });
+  await rpc(staff, 'app_save_enquiry', { id: e.id, client_id: gone.id });
+  await rejects(rpc(staff, 'app_erase_client', { id: gone.id, reason: 'request' }), /Owner access required/);
+  const res = await rpc(owner, 'app_erase_client', { id: gone.id, reason: 'Deletion request by email' });
+  assert.equal(res.enquiries, 1); assert.equal(res.drafts, 1); assert.ok(res.audit_rows_redacted >= 3);
+  assert.deepEqual(await api.sqlAdmin(`select id from clients where id = '${gone.id}'`), []);
+  const leak = await api.sqlAdmin(`select count(*)::int n from audit_log where old_data::text ilike '%erase.me%' or new_data::text ilike '%erase.me%' or old_data::text ilike '%0831112222%'`);
+  assert.equal(leak[0].n, 0, 'no trace of the erased person left in the audit log');
+
+  const e2 = await rpc(staff, 'app_save_enquiry', { source: 'website', name: 'Spam Person', email: 'spam@x.example' });
+  await rpc(owner, 'app_erase_enquiry', { id: e2.id });
+  assert.equal((await api.sqlAdmin(`select count(*)::int n from audit_log where new_data::text ilike '%spam@x.example%'`))[0].n, 0);
+});
+
+test('audit log stays append-only outside a lawful erasure', async () => {
+  await rejects(api.sqlAdmin("update audit_log set new_data = '{}' where id = (select min(id) from audit_log)"), /immutable/);
+  await rejects(api.sqlAdmin('delete from audit_log where id = (select min(id) from audit_log)'), /immutable/);
+  await rejects(api.sqlAs(owner, 'select app_redact_audit(array[\'x\'])'), /permission denied/);
+});
+
+test('retention: only enquiries/clients that never led to work and are older than the period are deleted', async () => {
+  const oldEnq = (await api.sqlAdmin(`insert into enquiries (received_at, source, name, email, message) values (now() - interval '30 months', 'website', 'Old Lead', 'old@lead.example', 'old') returning id`))[0].id;
+  const newEnq = (await api.sqlAdmin(`insert into enquiries (received_at, source, name, email, message) values (now() - interval '3 months', 'website', 'New Lead', 'new@lead.example', 'new') returning id`))[0].id;
+  const oldClient = (await api.sqlAdmin(`insert into clients (name, email, created_at) values ('Dormant Prospect', 'dormant@x.example', now() - interval '30 months') returning id`))[0].id;
+  const oldPaying = (await api.sqlAdmin(`insert into clients (name, created_at) values ('Old But Invoiced', now() - interval '30 months') returning id`))[0].id;
+  let inv = await rpc(owner, 'app_save_document', { kind: 'invoice', client_id: oldPaying, lines: [{ name: 'x', qty: 1, unit_price_cents: 100 }] });
+  inv = await rpc(owner, 'app_issue_document', { id: inv.id });
+
+  await rejects(rpc(staff, 'app_retention_preview', {}), /Owner access required/);
+  const pv = await rpc(owner, 'app_retention_preview', { months: 24 });
+  assert.ok(pv.enquiries >= 1 && pv.clients >= 1, JSON.stringify(pv));
+  await rejects(rpc(owner, 'app_apply_retention', { months: 24 }), /Confirm/);
+  const done = await rpc(owner, 'app_apply_retention', { months: 24, confirm: true });
+  assert.ok(done.enquiries_deleted >= 1 && done.clients_deleted >= 1);
+  assert.deepEqual(await api.sqlAdmin(`select id from enquiries where id = '${oldEnq}'`), []);
+  assert.equal((await api.sqlAdmin(`select count(*)::int n from enquiries where id = '${newEnq}'`))[0].n, 1, 'recent enquiry kept');
+  assert.deepEqual(await api.sqlAdmin(`select id from clients where id = '${oldClient}'`), []);
+  assert.equal((await api.sqlAdmin(`select count(*)::int n from clients where id = '${oldPaying}'`))[0].n, 1, 'clients with invoices kept');
+  assert.equal((await api.sqlAdmin(`select count(*)::int n from audit_log where new_data::text ilike '%dormant@x.example%' or old_data::text ilike '%old@lead.example%'`))[0].n, 0);
 });
 
 /* ── audit + reports ───────────────────────────────────────────── */

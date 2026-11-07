@@ -33,8 +33,14 @@ function card(title, question, model, render) {
 }
 
 export async function renderInsights(ctx) {
-  const data = await ctx.api.rpc('insights_data', {});
+  const [data, clientList] = await Promise.all([ctx.api.rpc('insights_data', {}), ctx.api.rpc('list_clients', { include_archived: true })]);
   const R = runAll(data);
+  // POPIA s69: never suggest contacting clients who opted out of marketing
+  const optedOut = new Set(clientList.filter((c) => c.marketing_opt_out).map((c) => c.id));
+  if (R.retention.ready) {
+    R.retention.drifting.forEach((c) => { c.optedOut = optedOut.has(c.id); });
+    R.retention.contactable = R.retention.drifting.filter((c) => !c.optedOut);
+  }
   const d = R.descriptive;
   const cat = new Map((data.categories || []).map((c) => [c.id, c.label]));
 
@@ -99,7 +105,8 @@ export async function renderInsights(ctx) {
       m.dropoutMeasured ? null : h('p', { class: 'muted' }, 'Few clients have stopped buying so far, so the model can\'t yet measure drop-out. "Drifting" uses each client\'s own usual gap between orders.'),
       h('h3', {}, 'Drifting away: worth a call'),
       m.drifting.length ? h('ul', {}, m.drifting.slice(0, 10).map((c) => h('li', {}, h('a', { href: `#/clients/${c.id}` }, c.name),
-        ` · ${c.purchases} jobs · last ${c.weeksSinceLast} weeks ago${c.usualGapWeeks ? ` (usually every ${c.usualGapWeeks})` : ''} · ${Math.round(c.pAlive * 100)}% likely still active`)))
+        ` · ${c.purchases} jobs · last ${c.weeksSinceLast} weeks ago${c.usualGapWeeks ? ` (usually every ${c.usualGapWeeks})` : ''} · ${Math.round(c.pAlive * 100)}% likely still active`,
+        c.optedOut ? h('strong', { class: 'danger' }, ' · opted out of marketing: do not contact for sales') : null)))
         : h('p', { class: 'muted' }, 'Nobody looks overdue.'),
       h('h3', {}, 'Most likely to order again'),
       h('ul', {}, m.likely.slice(0, 8).map((c) => h('li', {}, h('a', { href: `#/clients/${c.id}` }, c.name), ` · about ${c.expectedOrders.toFixed(1)} jobs, ${money(c.expectedValueCents)} expected`))))),
@@ -139,7 +146,7 @@ function ideas(R, cat) {
   const top = d.byClientType.filter((r) => r.key !== 'unknown')[0];
   if (top && d.revenueNet > 0 && d.counts.invoices >= 15) out.push([`Market to more ${labelOf(CLIENT_TYPES, top.key).toLowerCase()} clients`, `They bring ${Math.round((top.cents / d.revenueNet) * 100)}% of your revenue from ${top.jobs} jobs.`]);
   if (d.counts.buyers >= 15 && d.repeatRate < 30) out.push(['Follow up after every job', `Only ${d.repeatRate}% of clients have come back. A check-in 4–6 weeks after delivery is a cheap way to lift that.`]);
-  if (R.retention.ready && R.retention.drifting.length) out.push([`Call ${R.retention.drifting.length} drifting client(s)`, `${R.retention.drifting.slice(0, 3).map((c) => c.name).join(', ')} used to order regularly and have gone quiet.`]);
+  if (R.retention.ready && R.retention.contactable.length) out.push([`Check in with ${R.retention.contactable.length} drifting client(s)`, `${R.retention.contactable.slice(0, 3).map((c) => c.name).join(', ')} used to order regularly and have gone quiet. Clients who opted out of marketing are left off this list.`]);
   if (R.themes.ready) {
     const th = R.themes.themes.find((t) => t.size >= 8 && t.quoteLines >= 5);
     if (th) out.push([`Turn "${th.terms.slice(0, 2).join(' ')}" into a standard product`, `It has come up ${th.size} times. A listed price and lead time makes it easy to buy.`]);

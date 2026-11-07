@@ -215,6 +215,7 @@ async function renderEditor(ctx, kind, existing) {
   const taxMode = select('tax_mode', [['exclusive', 'Add VAT to prices'], ['inclusive', 'Prices include VAT'], ['none', 'No VAT']], doc.tax_mode);
   const vatIn = h('input', { type: 'text', inputmode: 'decimal', class: 'num', value: String(doc.vat_rate), 'aria-label': 'VAT rate' });
   const shipTax = h('input', { type: 'checkbox', checked: doc.shipping_taxable !== false });
+  const vatWarn = h('p', { class: 'field-error', role: 'status' });
   const depType = select('deposit_type', [['none', 'No deposit'], ['percent', 'Percent %'], ['amount', 'Fixed amount']], doc.deposit_type);
   const depVal = h('input', { type: 'text', inputmode: 'decimal', class: 'num', 'aria-label': 'Deposit value',
     value: doc.deposit_type === 'percent' ? String(doc.deposit_percent) : centsToInput(doc.deposit_amount_cents) });
@@ -231,6 +232,13 @@ async function renderEditor(ctx, kind, existing) {
     if (doc.deposit_type === 'amount') doc.deposit_amount_cents = Math.max(0, toCents(depVal.value) ?? 0);
     discVal.disabled = doc.discount_type === 'none'; depVal.disabled = doc.deposit_type === 'none';
     vatIn.disabled = doc.tax_mode === 'none'; shipTax.disabled = doc.tax_mode === 'none';
+    // VAT Act: a registered vendor must show VAT on a tax invoice; a non-vendor may not charge VAT
+    const registered = !!String(s.vat_number || '').trim();
+    vatWarn.textContent = registered && doc.tax_mode === 'none'
+      ? 'Your company is VAT-registered: invoices must show VAT (choose "Add VAT" or "Prices include VAT"), not a manual VAT line.'
+      : !registered && doc.tax_mode !== 'none'
+        ? 'No VAT number is set in Settings → Company profile. Only VAT-registered businesses may charge VAT.'
+        : '';
   };
   discType.addEventListener('change', () => { discVal.value = discType.value === 'percent' ? String(doc.discount_percent || 0) : centsToInput(doc.discount_amount_cents); readFigures(); markDirty(); });
   depType.addEventListener('change', () => { depVal.value = depType.value === 'percent' ? String(doc.deposit_percent || 0) : centsToInput(doc.deposit_amount_cents); readFigures(); markDirty(); });
@@ -368,6 +376,7 @@ async function renderEditor(ctx, kind, existing) {
           field('Shipping', shipIn),
           h('div', { class: 'pair' }, field('VAT', taxMode), field('Rate %', vatIn)),
           h('label', { class: 'check' }, shipTax, h('span', {}, 'Charge VAT on shipping')),
+          vatWarn,
           h('div', { class: 'pair' }, field('Deposit', depType), field('Value', depVal))),
         totalsBox),
       ctx.owner ? internalBox : null),

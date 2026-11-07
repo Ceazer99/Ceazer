@@ -20,6 +20,7 @@ const SECTIONS = [
   { id: 'team', label: 'Team', owner: true },
   { id: 'security', label: 'Security', owner: false },
   { id: 'data', label: 'Import & export', owner: false },
+  { id: 'privacy', label: 'Privacy & retention (POPIA)', owner: true },
   { id: 'audit', label: 'Audit log', owner: true },
 ];
 
@@ -32,7 +33,7 @@ export async function renderSettings(ctx, section) {
   const body = await ({
     company: companySection, branding: brandingSection, numbering: numberingSection, tax: taxSection,
     documents: documentsSection, email: emailSection, costing: costingSection, categories: categoriesSection, team: teamSection,
-    security: securitySection, data: dataSection, audit: auditSection,
+    security: securitySection, data: dataSection, audit: auditSection, privacy: privacySection,
   }[current.id])(ctx);
   return h('div', {}, setTitle('Settings'),
     h('div', { class: 'settings-grid has-section' }, menu,
@@ -412,6 +413,49 @@ function importWizard(ctx) {
   return h('div', { class: 'stack' }, h('h3', {}, 'Import from CSV (migration)'),
     h('p', { class: 'muted' }, 'Export your data as CSV from your previous app (Settings → Export data in CSV), then import in this order: clients, items, quotes, invoices.'),
     h('div', { class: 'grid-3' }, field('What are you importing?', type), field('Dates in the file', order), field('CSV file', file)), stage);
+}
+
+async function privacySection(ctx) {
+  const months = h('input', { type: 'number', min: 6, max: 120, value: 24, class: 'num', 'aria-label': 'Retention period in months' });
+  const out = h('div', { class: 'stack' });
+  const preview = h('button', { type: 'button', class: 'btn' }, 'Check what is due for deletion');
+  preview.addEventListener('click', busy(preview, async () => {
+    const r = await ctx.api.rpc('retention_preview', { months: Number(months.value) });
+    const del = h('button', { type: 'button', class: 'btn btn-danger' }, `Delete ${r.enquiries + r.clients} record(s) now`);
+    del.disabled = !(r.enquiries + r.clients);
+    del.addEventListener('click', busy(del, async () => {
+      const ok = await modal('Delete old records?', h('p', {}, `Permanently delete ${r.enquiries} enquiries and ${r.clients} prospect records older than ${r.months} months that never led to a quote or invoice. This cannot be undone.`),
+        [{ label: 'Cancel', value: false }, { label: 'Delete permanently', class: 'btn-danger', value: true }]);
+      if (!ok) return;
+      const d = await ctx.api.rpc('apply_retention', { months: r.months, confirm: true });
+      toast(`Deleted ${d.enquiries_deleted} enquiries and ${d.clients_deleted} prospects`);
+      ctx.navigate('/settings/privacy');
+    }));
+    clear(out).append(h('p', {}, `Older than ${r.months} months and never led to work: ${r.enquiries} enquiries, ${r.clients} prospect records.`),
+      r.financial_records_older_than_7_years ? h('p', {}, `${r.financial_records_older_than_7_years} quotes/invoices are older than 7 years and may now be anonymised; ask for help when this happens.`) : null,
+      h('div', {}, del));
+  }));
+  const todo = [
+    ['Register your Information Officer with the Information Regulator on its eServices portal (free). The owner/CEO is the Information Officer by default, and the same portal login is needed to report a breach, so do it before you ever need it.', 'https://eservices.inforegulator.org.za/'],
+    ['Accept the Supabase Data Processing Addendum (Supabase dashboard → Organization → Legal documents). It is your written contract with the operator that stores your data (POPIA s21).', 'https://supabase.com/legal/dpa'],
+    ['Have staff sign a short confidentiality undertaking before giving them an admin login (POPIA s20 and s19).', null],
+    ['Run "Check what is due for deletion" below every few months, so enquiries are not kept longer than the 24 months promised in the privacy policy.', null],
+    ['Answer access, correction or deletion requests within 30 days. Confirm the person\'s identity first, then use the Privacy panel on the client\'s page.', null],
+  ];
+  return h('div', { class: 'stack' },
+    h('p', { class: 'muted' }, 'Tools and reminders for the Protection of Personal Information Act (POPIA). This is practical guidance, not legal advice.'),
+    h('h3', {}, 'Your to-do list'),
+    h('ol', { class: 'stack' }, todo.map(([t, href]) => h('li', {}, t, href ? h('span', {}, ' ', h('a', { href, target: '_blank', rel: 'noopener' }, 'Open')) : null))),
+    h('h3', {}, 'Retention'),
+    h('p', { class: 'muted' }, 'Quotes, invoices, payments and the clients on them are kept for 7 years (Companies Act s24, Tax Administration Act s29) and are never touched by this tool.'),
+    h('div', { class: 'row-gap' }, field('Keep enquiries that led nowhere for (months)', months), preview), out,
+    h('h3', {}, 'If personal information is ever leaked or accessed without permission'),
+    h('ol', {}, [
+      'Contain it: change passwords, deactivate the affected login (Settings → Team), and rotate the Supabase keys if they may be exposed.',
+      'Work out what was affected, using Settings → Audit log.',
+      'Notify the Information Regulator through its eServices portal (eservices.inforegulator.org.za → security compromise notification; email is no longer accepted), and tell the affected people, as soon as reasonably possible (POPIA s22). You can report on what you know and update it later.',
+      'Write down what happened and what you changed.',
+    ].map((t) => h('li', {}, t))));
 }
 
 async function auditSection(ctx) {
